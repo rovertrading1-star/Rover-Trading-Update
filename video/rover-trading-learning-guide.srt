@@ -1,0 +1,63 @@
+1
+00:00:03,200 --> 00:00:11,079
+How learning works: payment, approval, live class, notes.
+
+2
+00:00:11,079 --> 00:00:22,260
+Every step unlocks the next inside your student account.
+
+3
+00:00:23,360 --> 00:00:30,870
+Pay into the ABSA account using your student number as reference.
+
+4
+00:00:30,870 --> 00:00:41,540
+Then upload the proof of payment inside the portal.
+
+5
+00:00:42,640 --> 00:00:49,108
+The academy admin reviews your POP from the dashboard.
+
+6
+00:00:49,108 --> 00:00:58,340
+Once accepted, your payment status flips and the portal unlocks.
+
+7
+00:00:59,440 --> 00:01:06,748
+Accepted students get the live lesson card with the Join button.
+
+8
+00:01:06,748 --> 00:01:17,140
+Meeting ID, passcode and instructor come from the scheduled lecture.
+
+9
+00:01:18,240 --> 00:01:25,481
+Progress tracking shows verified chapters and a completion percentage.
+
+10
+00:01:25,481 --> 00:01:35,780
+Your instructor adds evaluation and feedback chapter by chapter.
+
+11
+00:01:36,880 --> 00:01:44,894
+Published notes open in the protected reader, chapter by chapter.
+
+12
+00:01:44,894 --> 00:01:56,260
+Watermarked, read only, and only for accepted students.
+
+13
+00:01:57,360 --> 00:02:03,442
+Admins publish documents, schedule Zoom links and update progress.
+
+14
+00:02:03,442 --> 00:02:12,140
+Everything a student sees is managed from one dashboard.
+
+15
+00:02:13,240 --> 00:02:17,675
+One portal: pay, learn live, track progress, read the notes.
+
+16
+00:02:17,675 --> 00:02:24,100
+Rover Trading Academy.
