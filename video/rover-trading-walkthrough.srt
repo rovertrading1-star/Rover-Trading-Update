@@ -1,0 +1,79 @@
+1
+00:00:03,900 --> 00:00:10,117
+Welcome to Rover Trading, the academy where you learn to read the market, one candle at a time.
+
+2
+00:00:10,117 --> 00:00:18,100
+In this walkthrough, we'll tour every page: the landing page, student sign-up, the member dashboard, and the admin portal.
+
+3
+00:00:19,500 --> 00:00:29,974
+Below the hero, the About section lays out the teaching philosophy: understand the market, learn through practice, and build discipline before taking on real risk.
+
+4
+00:00:29,974 --> 00:00:41,220
+From there, the curriculum unfolds across three chapters - market foundations, advanced market analysis, and trading psychology - each followed by a guided live practice week.
+
+5
+00:00:42,620 --> 00:00:50,439
+Between chapters sits the academy's book edition, Read the Market like a Rover, by Lethabo Loate.
+
+6
+00:00:50,439 --> 00:00:58,903
+Then comes course investment: Standard at R150, Premium at R400, and Rover Signals, which is coming soon.
+
+7
+00:00:58,903 --> 00:01:03,740
+Every application is processed inside the student dashboard.
+
+8
+00:01:05,140 --> 00:01:14,259
+The weekly timetable lists the Sunday pre-class briefing on Zoom, along with each chapter's session times, so students always know when to log in.
+
+9
+00:01:14,259 --> 00:01:21,380
+Below that, a live average rating is calculated from verified student reviews, and graduates can submit their own.
+
+10
+00:01:22,780 --> 00:01:29,800
+The terms and conditions section answers the practical questions: attendance, course rules, and risk disclaimers.
+
+11
+00:01:29,800 --> 00:01:39,740
+Contact cards for Instagram, TikTok, and WhatsApp follow, and the page closes with a call to action that sends visitors to create a student account, or sign in.
+
+12
+00:01:41,140 --> 00:01:51,820
+New students start on the sign-up page, where the form captures their details, shows a live password strength meter, and automatically generates an RT account number.
+
+13
+00:01:53,220 --> 00:02:03,260
+Returning students use the login screen, which offers quick-fill buttons for the demo student and admin accounts, a password visibility toggle, and Google sign-in.
+
+14
+00:02:04,660 --> 00:02:11,982
+Signing in lands on the student dashboard: your account number, enrollment status, and three clear next steps.
+
+15
+00:02:11,982 --> 00:02:21,300
+Each tab handles one job, from applications and enquiries, through to banking details and proof of payment, and finally the learners portal.
+
+16
+00:02:22,700 --> 00:02:25,650
+Administrators get a dedicated operations portal.
+
+17
+00:02:25,650 --> 00:02:32,213
+Submitted proofs of payment are reviewed and approved, which unlocks a student's learners portal immediately.
+
+18
+00:02:32,213 --> 00:02:40,100
+Admins can also manage curriculum documents, update Zoom meeting links, monitor student progress, and browse the members directory.
+
+19
+00:02:41,500 --> 00:02:48,941
+That's the full walk around of Rover Trading: one connected platform, from first click to graduation.
+
+20
+00:02:48,941 --> 00:02:51,740
+Read the market, one candle at a time.
