@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Rover Trading Academy Admin Control Panel - Manage students, review POPs, update learning documents, configure Zoom meetings, monitor progress, and moderate comments.">
+  <title>Admin Control Center | Rover Trading Academy</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23a3e635' rx='20' width='100' height='100'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='black' font-family='Arial' font-weight='bold'>R</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070c0b;
+      --card: #101917;
+      --card-2: #15211d;
+      --border: #27342e;
+      --green: #a3e635;
+      --green-glow: rgba(163,230,53,0.3);
+      --white: #f6faf7;
+      --muted: #94a69a;
+      --red: #ff7777;
+      --warn: #f59e0b;
+      --ok: #22c55e;
+      --gold: #ffd700;
+      --blue: #60a5fa;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    /* Nav */
+    .nav {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7,12,11,0.95);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--green), #65a30d);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 0 15px var(--green-glow);
+    }
+    .logo span { color: var(--green); }
+    .admin-pill {
+      background: rgba(255,215,0,0.15);
+      border: 1px solid rgba(255,215,0,0.3);
+      color: var(--gold);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    /* Tab navigation */
+    .admin-tabs {
+      display: flex;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 4px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .admin-tab-btn {
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      transition: 0.2s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+    .admin-tab-btn.active {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 2px 10px rgba(163,230,53,0.25);
+    }
+
+    /* Main Container */
+    .main { max-width: 1240px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    /* Panels & Badges */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .panel h2 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-ok { background: rgba(34,197,94,0.15); color: var(--ok); border: 1px solid rgba(34,197,94,0.3); }
+    .badge-warn { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+    .data-table th {
+      text-align: left;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-2);
+    }
+    .data-table td {
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* Buttons */
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+    .btn-accept { background: var(--ok); color: #000; }
+    .btn-accept:hover { background: #4ade80; }
+    .btn-decline { background: rgba(239,68,68,0.15); color: var(--red); border-color: rgba(239,68,68,0.3); }
+    .btn-decline:hover { background: var(--red); color: #000; }
+    .btn-green { background: var(--green); color: #000; font-weight: 800; }
+    .btn-green:hover { background: #d2ffac; }
+    .btn-outline { background: transparent; border-color: var(--border); color: #fff; }
+    .btn-outline:hover { border-color: var(--green); }
+
+    /* Form Inputs */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    .form-control {
+      width: 100%;
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13px;
+    }
+    .form-control:focus { outline: none; border-color: var(--green); box-shadow: 0 0 10px rgba(163,230,53,0.15); }
+
+    /* Modals */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      max-width: 600px;
+      width: 100%;
+      padding: 30px;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @media(max-width:768px) {
+      .nav { padding: 0 16px; }
+      .admin-tabs { width: 100%; }
+      .data-table { font-size: 12px; }
+    }
+  </style>
+
+  <!-- Rover Trading Firebase Cloud Service (Relative for GitHub Pages) -->
+  <script src="firebase.js"></script>
+</head>
+<body>
+  <div id="toastC"></div>
+
+  <!-- Navbar -->
+  <nav class="nav">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="index.html" class="logo">
+        <div class="logo-badge">R</div>
+        <div>ROVER <span>TRADING</span></div>
+      </a>
+      <span class="admin-pill">Academy Admin</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="index.html" style="font-size:13px;color:var(--muted)">Academy Home</a>
+      <a href="dashboard.html" style="font-size:13px;color:var(--green)">Student View →</a>
+      <button class="btn-action btn-outline" style="font-size:12px;padding:6px 12px" onclick="logout()">Sign Out ↪</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <!-- Header Title -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:14px;">
+      <div>
+        <h1 style="font-family:'Manrope',sans-serif;font-size:26px;font-weight:800;">Administration & Course Operations</h1>
+        <p style="color:var(--muted);font-size:13px">Review student proof of payments, manage curriculum documents, update Zoom lessons, monitor progress, and moderate reviews.</p>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <span class="badge badge-ok">Cloud Firestore Synced</span>
+      </div>
+    </div>
+
+    <!-- Admin Navigation Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" id="btnAdminTabPops" onclick="switchAdminTab('pops')">
+        <span>💳</span> Proof of Payments & Admissions (<span id="countPendingPops">0</span>)
+      </button>
+      <button class="admin-tab-btn" id="btnAdminTabLearningDoc" onclick="switchAdminTab('learningDoc')">
+        <span>📖</span> Learning Document Manager
+      </button>
+      <button class="admin-tab-btn" id="btnAdminTabZoom" onclick="switchAdminTab('zoom')">
+        <span>🎥</span> Zoom Meeting Links
+      </button>
+      <button class="admin-tab-btn" id="btnAdminTabProgress" onclick="switchAdminTab('progress')">
+        <span>📊</span> Student Progress Monitoring
+      </button>
+      <button class="admin-tab-btn" id="btnAdminTabMembers" onclick="switchAdminTab('members')">
+        <span>👥</span> Members Directory
+      </button>
+      <button class="admin-tab-btn" id="btnAdminTabComments" onclick="switchAdminTab('comments')">
+        <span>💬</span> Comment Control Panel
+      </button>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: PROOF OF PAYMENTS & ADMISSIONS REVIEW -->
+    <!-- ======================================================== -->
+    <div id="adminTab-pops" class="admin-content">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2><span>💳</span> Review Student Proof of Payments (POP)</h2>
+            <p style="font-size:13px;color:var(--muted)">Review submitted bank payments and approve admissions. Approving a student automatically unlocks their Learners Portal.</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <select id="popFilterSelect" class="form-control" style="width:auto;padding:6px 12px;font-size:12px;" onchange="renderPopsTable()">
+              <option value="all">All Applications</option>
+              <option value="under_review" selected>Pending Review (Needs Action)</option>
+              <option value="accepted">Accepted / Enrolled</option>
+              <option value="pending_payment">Awaiting Payment</option>
+              <option value="declined">Declined</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>App ID</th>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Amount</th>
+                <th>POP Reference</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="popsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: LEARNING DOCUMENT MANAGEMENT -->
+    <!-- ======================================================== -->
+    <div id="adminTab-learningDoc" class="admin-content" style="display:none">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+          <div>
+            <h2><span>📖</span> Manage Proprietary Learning Document</h2>
+            <p style="font-size:13px;color:var(--muted)">Edit the protected in-app curriculum handbook accessible exclusively to accepted students.</p>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-action btn-outline" onclick="resetDocToMaster()">↻ Reset to Master Template</button>
+            <button class="btn-action btn-green" onclick="saveLearningDocChanges()">💾 Save Changes to Cloud</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Curriculum Document Title</label>
+          <input type="text" id="editDocTitle" class="form-control" style="font-weight:700;font-size:15px;">
+        </div>
+        <div class="form-group">
+          <label>Curriculum Subtitle / Attribution</label>
+          <input type="text" id="editDocSubtitle" class="form-control">
+        </div>
+
+        <!-- PDF Learning Document Upload & Cloud Sync Section -->
+        <div style="background:var(--card-2);border:1px solid #27342e;border-radius:14px;padding:20px;margin:24px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+            <div>
+              <span class="badge badge-ok">PDF Learning Document</span>
+              <h3 style="font-size:17px;margin:6px 0 2px;">Upload & Send PDF Curriculum to Firestore Cloud</h3>
+              <p style="font-size:13px;color:var(--muted)">Upload an official PDF document for students. Once synced to Firestore, accepted students will immediately be able to read this PDF document directly inside their Learners tab.</p>
+            </div>
+            <div id="pdfActiveStatusBadgeWrap">
+              <span class="badge badge-blue">Mode: Text Chapters</span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:center;margin-top:16px;">
+            <div class="form-group" style="margin-bottom:0">
+              <label>Select PDF Document File (.pdf)</label>
+              <input type="file" id="adminPdfInput" class="form-control" accept=".pdf,application/pdf" style="padding:8px">
+              <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block">Max file size: 10MB for direct cloud sync. Documents are protected from download/print.</small>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-end;">
+              <button class="btn-action btn-green" id="btnUploadPdf" style="padding:12px 20px;width:100%;font-size:13px;" onclick="uploadPdfLearningDoc()" disabled>
+                🚀 Publish & Sync PDF to Firestore Cloud
+              </button>
+            </div>
+          </div>
+
+          <!-- Staged PDF Details & Preview -->
+          <div id="adminPdfStagedWrap" style="display:none;margin-top:16px;background:#101917;border:1px solid #27342e;border-radius:10px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:24px;">📄</span>
+                <div>
+                  <div id="adminStagedPdfName" style="font-weight:700;font-size:13px;color:#fff;">Handbook.pdf</div>
+                  <div id="adminStagedPdfSize" style="font-size:11px;color:var(--muted);">250 KB</div>
+                </div>
+              </div>
+              <span class="badge badge-warn">Staged (Click "Publish & Sync PDF" to upload)</span>
+            </div>
+            <div style="height:320px;border-radius:8px;overflow:hidden;border:1px solid #27342e;">
+              <iframe id="adminStagedPdfPreview" src="" style="width:100%;height:100%;border:none;"></iframe>
+            </div>
+          </div>
+
+          <!-- Active PDF Info Card -->
+          <div id="adminActivePdfCard" style="display:none;margin-top:16px;background:#14221d;border:1px solid #27342e;border-radius:10px;padding:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:28px;">✓</span>
+              <div>
+                <strong style="color:var(--green);font-size:14px;">Active PDF Document Live on Firestore Cloud</strong>
+                <div id="adminActivePdfDetails" style="font-size:12px;color:var(--muted);margin-top:2px;">Rover_Trading_Handbook.pdf</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn-action btn-outline" style="font-size:12px;padding:6px 12px;" onclick="previewActiveAdminPdf()">👁 Preview PDF</button>
+              <button class="btn-action btn-decline" style="font-size:12px;padding:6px 12px;" onclick="removeActiveAdminPdf()">🗑 Remove PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chapters Accordion / Editor -->
+        <h3 style="font-size:16px;margin:24px 0 12px;color:var(--green)">Curriculum Chapters Content</h3>
+        <div id="chaptersEditorWrap">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: ZOOM MEETING LINKS -->
+    <!-- ======================================================== -->
+    <div id="adminTab-zoom" class="admin-content" style="display:none">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2><span>🎥</span> Live Zoom Meeting Links</h2>
+            <p style="font-size:13px;color:var(--muted)">Schedule, edit, or delete interactive Zoom classes for accepted students.</p>
+          </div>
+          <button class="btn-action btn-green" onclick="openZoomModal()">+ Create New Zoom Meeting</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Topic</th>
+                <th>Schedule</th>
+                <th>Zoom URL</th>
+                <th>Meeting ID</th>
+                <th>Passcode</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="zoomTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: STUDENT PROGRESS MONITORING -->
+    <!-- ======================================================== -->
+    <div id="adminTab-progress" class="admin-content" style="display:none">
+      <div class="panel">
+        <h2><span>📊</span> Student Progress Monitoring & Evaluations</h2>
+        <p style="font-size:13px;color:var(--muted)">Monitor student milestone completion, adjust progress percentages, and send custom instructor evaluation feedback reports.</p>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th>Student</th>
+                <th>Overall Progress</th>
+                <th>Chapters Completed</th>
+                <th>Instructor Evaluation / Report</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="progressTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 5: MEMBERS DIRECTORY -->
+    <!-- ======================================================== -->
+    <div id="adminTab-members" class="admin-content" style="display:none">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2><span>👥</span> Registered Members Directory</h2>
+            <p style="font-size:13px;color:var(--muted)">All active student and administrator accounts in the academy.</p>
+          </div>
+          <button class="btn-action btn-outline" onclick="renderMembersTable()">↻ Refresh</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Account #</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Cell</th>
+                <th>Role</th>
+                <th>Payment Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membersTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 6: COMMENT CONTROL PANEL -->
+    <!-- ======================================================== -->
+    <div id="adminTab-comments" class="admin-content" style="display:none">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2><span>💬</span> Comment Control Panel (Reviews)</h2>
+            <p style="font-size:13px;color:var(--muted)">Manage public comments on the homepage. Hide from display, flag inappropriate writing, or delete permanently from the cloud.</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <select id="reviewFilterSelect" class="form-control" style="width:auto;padding:6px 12px;font-size:12px;" onchange="renderCommentsTable()">
+              <option value="all">All Comments</option>
+              <option value="visible">Live on Site</option>
+              <option value="hidden">Hidden from Display</option>
+              <option value="flagged">Flagged Inappropriate</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Rating</th>
+                <th>Comment Content</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="commentsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Zoom Meeting Create/Edit Modal -->
+  <div class="modal-backdrop" id="zoomModal">
+    <div class="modal-box">
+      <button style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px" onclick="closeZoomModal()">✕</button>
+      <h3 style="font-family:'Manrope',sans-serif;font-size:20px;font-weight:800;margin-bottom:16px;" id="zoomModalTitle">Create Zoom Meeting</h3>
+
+      <input type="hidden" id="zoomEditId">
+      <div class="form-group">
+        <label>Topic / Title</label>
+        <input type="text" id="modalZoomTopic" class="form-control" placeholder="e.g. Price Action Live Masterclass" required>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="form-group">
+          <label>Schedule Day</label>
+          <input type="text" id="modalZoomDate" class="form-control" placeholder="e.g. Every Tuesday & Thursday" required>
+        </div>
+        <div class="form-group">
+          <label>Schedule Time (SAST)</label>
+          <input type="text" id="modalZoomTime" class="form-control" placeholder="e.g. 18:00 - 19:30 SAST" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Zoom Meeting URL</label>
+        <input type="url" id="modalZoomUrl" class="form-control" placeholder="https://zoom.us/j/..." required>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="form-group">
+          <label>Meeting ID</label>
+          <input type="text" id="modalZoomId" class="form-control" placeholder="849 2049 1823">
+        </div>
+        <div class="form-group">
+          <label>Passcode</label>
+          <input type="text" id="modalZoomPasscode" class="form-control" placeholder="ROVER2025">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Instructor Instructions for Students</label>
+        <textarea id="modalZoomInstructions" class="form-control" rows="2" placeholder="Join 5 minutes prior with TradingView ready..."></textarea>
+      </div>
+      <button class="btn-action btn-green" style="width:100%;padding:12px;font-size:14px;" onclick="saveZoomMeeting()">Save Zoom Meeting ↗</button>
+    </div>
+  </div>
+
+  <!-- Student Progress Edit Modal -->
+  <div class="modal-backdrop" id="progressModal">
+    <div class="modal-box">
+      <button style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px" onclick="closeProgressModal()">✕</button>
+      <h3 style="font-family:'Manrope',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">Adjust Student Progress & Report</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;" id="progModalStudentLabel">Student: Tshiamo Lesego (RT10001)</p>
+
+      <input type="hidden" id="progUserIdInput">
+
+      <div class="form-group">
+        <label style="display:flex;justify-content:space-between">
+          <span>Overall Progress %</span>
+          <strong id="progSliderLabel" style="color:var(--green)">75%</strong>
+        </label>
+        <input type="range" id="progSlider" min="0" max="100" step="5" value="75" class="form-control" style="padding:0;accent-color:var(--green)" oninput="document.getElementById('progSliderLabel').textContent = this.value + '%'">
+      </div>
+
+      <div class="form-group">
+        <label>Chapters Completed</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#fff;background:var(--card-2);padding:10px;border-radius:8px;border:1px solid var(--border)">
+            <input type="checkbox" id="chCheck1"> Chapter 1 (Foundations)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#fff;background:var(--card-2);padding:10px;border-radius:8px;border:1px solid var(--border)">
+            <input type="checkbox" id="chCheck2"> Chapter 2 (Liquidity)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#fff;background:var(--card-2);padding:10px;border-radius:8px;border:1px solid var(--border)">
+            <input type="checkbox" id="chCheck3"> Chapter 3 (Risk Mgmt)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#fff;background:var(--card-2);padding:10px;border-radius:8px;border:1px solid var(--border)">
+            <input type="checkbox" id="chCheck4"> Chapter 4 (Trading Plan)
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Instructor Progress Report & Feedback Notes</label>
+        <textarea id="progNotesInput" class="form-control" rows="3" placeholder="Provide feedback or guidance for the student's next live class..."></textarea>
+      </div>
+
+      <button class="btn-action btn-green" style="width:100%;padding:12px;font-size:14px;" onclick="saveProgressModalChanges()">
+        Send Progress Report & Update Cloud ↗
+      </button>
+    </div>
+  </div>
+
+  <!-- POP Preview Modal -->
+  <div class="modal-backdrop" id="popPreviewModal">
+    <div class="modal-box" style="text-align:center;">
+      <button style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px" onclick="closePopPreviewModal()">✕</button>
+      <h3 style="font-size:18px;margin-bottom:14px;">Proof of Payment Attachment</h3>
+      <div id="popPreviewModalBody" style="margin-bottom:16px;"></div>
+      <button class="btn-action btn-outline" onclick="closePopPreviewModal()">Close Preview</button>
+    </div>
+  </div>
+
+  <script>
+    // Tab Controller
+    function switchAdminTab(tabId) {
+      document.querySelectorAll('.admin-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      const target = document.getElementById('adminTab-' + tabId);
+      if (target) target.style.display = 'block';
+
+      const btn = document.getElementById('btnAdminTab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+      if (btn) btn.classList.add('active');
+
+      if (tabId === 'pops') renderPopsTable();
+      if (tabId === 'learningDoc') renderLearningDocEditor();
+      if (tabId === 'zoom') renderZoomTable();
+      if (tabId === 'progress') renderProgressTable();
+      if (tabId === 'members') renderMembersTable();
+      if (tabId === 'comments') renderCommentsTable();
+    }
+
+    function logout() {
+      window.RoverStore.setCurrentUser(null);
+      if (window.auth && window.auth.signOut) window.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    // -------------------------------------------------------------
+    // 1. PROOF OF PAYMENTS & ADMISSIONS
+    // -------------------------------------------------------------
+    function renderPopsTable() {
+      const filter = document.getElementById('popFilterSelect').value;
+      const apps = window.RoverStore.getApplications();
+
+      // Count pending
+      const pendingCount = apps.filter(a => a.status === 'under_review').length;
+      document.getElementById('countPendingPops').textContent = pendingCount;
+
+      let filtered = apps;
+      if (filter !== 'all') {
+        filtered = apps.filter(a => a.status === filter);
+      }
+
+      const tbody = document.getElementById('popsTableBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No applications match the "${filter}" filter.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(a => {
+        let statusBadge = '';
+        if (a.status === 'accepted') statusBadge = '<span class="badge badge-ok">Accepted</span>';
+        else if (a.status === 'under_review') statusBadge = '<span class="badge badge-warn">Review Needed</span>';
+        else if (a.status === 'declined') statusBadge = '<span class="badge badge-red">Declined</span>';
+        else statusBadge = '<span class="badge badge-blue">Awaiting Payment</span>';
+
+        const popRefDisplay = a.popReference
+          ? `<strong style="font-family:monospace;color:var(--green)">${a.popReference}</strong>`
+          : '<span style="color:var(--muted)">None</span>';
+
+        const viewPopBtn = a.popAttachment
+          ? `<button class="btn-action btn-outline" style="font-size:11px;padding:4px 8px;margin-left:6px" onclick="previewPopAttachment('${a.id}')">👁 View POP</button>`
+          : '';
+
+        let actionBtns = '';
+        if (a.status === 'accepted') {
+          actionBtns = `<span style="color:var(--ok);font-size:12px;font-weight:700">✓ Enrolled</span>`;
+        } else {
+          actionBtns = `
+            <div style="display:flex;gap:6px;">
+              <button class="btn-action btn-accept" onclick="acceptStudentApplication('${a.id}')" title="Accept student and immediately unlock Learners Portal">✓ Accept</button>
+              <button class="btn-action btn-decline" onclick="declineStudentApplication('${a.id}')" title="Decline application">✕ Decline</button>
+            </div>
+          `;
+        }
+
+        return `
+          <tr>
+            <td style="font-family:monospace">${a.id}</td>
+            <td>
+              <strong>${a.studentName}</strong>
+              <div style="font-size:11px;color:var(--muted)">${a.accountNumber} • ${a.studentEmail}</div>
+            </td>
+            <td>${a.course}</td>
+            <td><strong>R${a.coursePrice || 400}</strong></td>
+            <td>
+              <div style="display:flex;align-items:center">
+                ${popRefDisplay} ${viewPopBtn}
+              </div>
+            </td>
+            <td>${new Date(a.submittedAt).toLocaleDateString()}</td>
+            <td>${statusBadge}</td>
+            <td>${actionBtns}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function acceptStudentApplication(appId) {
+      if (!confirm('Accept this student application? This will confirm payment and immediately unlock the Learners Portal for this student.')) return;
+      await window.RoverStore.reviewApplication(appId, 'accepted', 'Payment verified by administrator.');
+      toast('success', 'Student Accepted!', 'Application confirmed. Student now has access to the Learners Portal.');
+      renderPopsTable();
+      renderMembersTable();
+    }
+
+    async function declineStudentApplication(appId) {
+      const reason = prompt('Please enter reason for declining (e.g. Invalid reference):', 'Payment could not be verified on bank statement.');
+      if (!reason) return;
+      await window.RoverStore.reviewApplication(appId, 'declined', reason);
+      toast('warning', 'Application Declined', 'Student status updated.');
+      renderPopsTable();
+      renderMembersTable();
+    }
+
+    function previewPopAttachment(appId) {
+      const app = window.RoverStore.getApplications().find(a => a.id === appId);
+      if (!app || !app.popAttachment) return;
+
+      const isPdf = app.popAttachmentType === 'pdf' || (typeof app.popAttachment === 'string' && app.popAttachment.startsWith('data:application/pdf'));
+
+      const body = document.getElementById('popPreviewModalBody');
+      body.innerHTML = `
+        <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">
+          Student: <strong style="color:#fff">${app.studentName}</strong> • Reference: <strong style="color:var(--green)">${app.popReference || 'N/A'}</strong> • Amount: <strong style="color:var(--green)">R${app.coursePrice}</strong>
+        </div>
+        ${isPdf
+          ? `<div style="height:520px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#101917;">
+               <iframe src="${app.popAttachment}" style="width:100%;height:100%;border:none;"></iframe>
+             </div>`
+          : `<img src="${app.popAttachment}" style="max-width:100%;max-height:480px;border-radius:12px;border:1px solid var(--border)">`
+        }
+      `;
+      document.getElementById('popPreviewModal').classList.add('open');
+    }
+
+    function closePopPreviewModal() {
+      document.getElementById('popPreviewModal').classList.remove('open');
+    }
+
+    // -------------------------------------------------------------
+    // 2. LEARNING DOCUMENT MANAGER (PDF Uploads + Chapters)
+    // -------------------------------------------------------------
+    let stagedPdfData = null;
+
+    // Staging a PDF file
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('adminPdfInput');
+      if (input) {
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          const stagedWrap = document.getElementById('adminPdfStagedWrap');
+          const uploadBtn = document.getElementById('btnUploadPdf');
+
+          stagedPdfData = null;
+          stagedWrap.style.display = 'none';
+          uploadBtn.disabled = true;
+
+          if (!file) return;
+
+          if (file.size > 750 * 1024) {
+            toast('warning', 'PDF Too Large', 'Please upload a PDF under 750KB for direct cloud sync (current size: ' + (file.size/1024).toFixed(0) + ' KB).');
+            e.target.value = '';
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            stagedPdfData = {
+              pdfDataUrl: evt.target.result,
+              pdfFileName: file.name,
+              pdfFileSize: (file.size / 1024).toFixed(0) + ' KB'
+            };
+
+            document.getElementById('adminStagedPdfName').textContent = file.name;
+            document.getElementById('adminStagedPdfSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+            document.getElementById('adminStagedPdfPreview').src = `${evt.target.result}#toolbar=0`;
+            stagedWrap.style.display = 'block';
+            uploadBtn.disabled = false;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    });
+
+    async function uploadPdfLearningDoc() {
+      if (!stagedPdfData || !stagedPdfData.pdfDataUrl) {
+        toast('warning', 'No PDF Selected', 'Please select a valid PDF file first.');
+        return;
+      }
+
+      const btn = document.getElementById('btnUploadPdf');
+      btn.disabled = true;
+      btn.textContent = 'Uploading to Firestore Cloud...';
+
+      const title = document.getElementById('editDocTitle').value.trim();
+      const subtitle = document.getElementById('editDocSubtitle').value.trim();
+
+      try {
+        await window.RoverStore.uploadLearningPdf({
+          pdfDataUrl: stagedPdfData.pdfDataUrl,
+          pdfFileName: stagedPdfData.pdfFileName,
+          pdfFileSize: stagedPdfData.pdfFileSize,
+          title: title,
+          subtitle: subtitle
+        });
+
+        toast('success', 'PDF Document Published!', 'Curriculum synchronized to Firestore Cloud. All accepted students now have instant access.');
+        document.getElementById('adminPdfInput').value = '';
+        document.getElementById('adminPdfStagedWrap').style.display = 'none';
+        stagedPdfData = null;
+        renderLearningDocEditor();
+      } catch (err) {
+        console.error("PDF upload error:", err);
+        toast('error', 'Upload Failed', err.message || 'Could not sync PDF document.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Publish & Sync PDF to Firestore Cloud';
+      }
+    }
+
+    function previewActiveAdminPdf() {
+      const docData = window.RoverStore.getLearningContent();
+      if (!docData || !docData.pdfDataUrl) return;
+
+      const body = document.getElementById('popPreviewModalBody');
+      body.innerHTML = `
+        <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">
+          Document: <strong style="color:#fff">${docData.pdfFileName || 'Rover_Curriculum.pdf'}</strong> • Size: <strong style="color:var(--green)">${docData.pdfFileSize || ''}</strong>
+        </div>
+        <div style="height:550px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#101917;">
+          <iframe src="${docData.pdfDataUrl}#toolbar=0" style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+      `;
+      document.getElementById('popPreviewModal').classList.add('open');
+    }
+
+    async function removeActiveAdminPdf() {
+      if (!confirm('Remove the PDF learning document from cloud storage and revert to structured text chapters?')) return;
+      await window.RoverStore.removeLearningPdf();
+      toast('info', 'PDF Removed', 'Curriculum reverted back to interactive chapters.');
+      renderLearningDocEditor();
+    }
+
+    function renderLearningDocEditor() {
+      const docData = window.RoverStore.getLearningContent();
+      document.getElementById('editDocTitle').value = docData.title || '';
+      document.getElementById('editDocSubtitle').value = docData.subtitle || '';
+
+      // PDF status card
+      const badgeWrap = document.getElementById('pdfActiveStatusBadgeWrap');
+      const activeCard = document.getElementById('adminActivePdfCard');
+
+      if (docData.docType === 'pdf' && docData.pdfDataUrl) {
+        badgeWrap.innerHTML = `<span class="badge badge-ok">✓ Mode: PDF Document Live</span>`;
+        activeCard.style.display = 'flex';
+        document.getElementById('adminActivePdfDetails').textContent = `${docData.pdfFileName || 'Curriculum.pdf'} (${docData.pdfFileSize || ''}) • Uploaded: ${new Date(docData.lastUpdated).toLocaleDateString()}`;
+      } else {
+        badgeWrap.innerHTML = `<span class="badge badge-blue">Mode: Text Chapters</span>`;
+        activeCard.style.display = 'none';
+      }
+
+      const wrap = document.getElementById('chaptersEditorWrap');
+      wrap.innerHTML = (docData.chapters || []).map((ch, idx) => `
+        <div style="background:var(--card-2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="color:var(--green)">Chapter 0${ch.number}</strong>
+            <span style="font-size:11px;color:var(--muted)">Module ID: ch_${ch.number}</span>
+          </div>
+          <div class="form-group">
+            <label>Chapter Title</label>
+            <input type="text" id="chTitle_${idx}" class="form-control" value="${ch.title.replace(/"/g, '&quot;')}">
+          </div>
+          <div class="form-group">
+            <label>Short Summary / Purpose</label>
+            <input type="text" id="chSummary_${idx}" class="form-control" value="${(ch.summary || '').replace(/"/g, '&quot;')}">
+          </div>
+          <div class="form-group">
+            <label>Chapter Content HTML (Protected In-App Reader Content)</label>
+            <textarea id="chContent_${idx}" class="form-control" rows="6" style="font-family:monospace;font-size:12px">${ch.content.trim()}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function saveLearningDocChanges() {
+      const docData = window.RoverStore.getLearningContent();
+      docData.title = document.getElementById('editDocTitle').value.trim();
+      docData.subtitle = document.getElementById('editDocSubtitle').value.trim();
+
+      (docData.chapters || []).forEach((ch, idx) => {
+        const titleEl = document.getElementById('chTitle_' + idx);
+        const sumEl = document.getElementById('chSummary_' + idx);
+        const contentEl = document.getElementById('chContent_' + idx);
+        if (titleEl) ch.title = titleEl.value;
+        if (sumEl) ch.summary = sumEl.value;
+        if (contentEl) ch.content = contentEl.value;
+      });
+
+      await window.RoverStore.saveLearningContent(docData);
+      toast('success', 'Curriculum Document Saved!', 'Changes synchronized to Firestore and live for all enrolled students.');
+    }
+
+    async function resetDocToMaster() {
+      if (!confirm('Reset the learning document back to the master Rover Trading curriculum template?')) return;
+      await window.RoverStore.resetLearningContentToDefault();
+      renderLearningDocEditor();
+      toast('info', 'Reset Complete', 'Curriculum restored to default master template.');
+    }
+
+    // -------------------------------------------------------------
+    // 3. ZOOM MEETING LINKS MANAGEMENT
+    // -------------------------------------------------------------
+    function renderZoomTable() {
+      const meetings = window.RoverStore.getZoomMeetings();
+      const tbody = document.getElementById('zoomTableBody');
+
+      if (meetings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No Zoom meetings scheduled. Click "+ Create New Zoom Meeting".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = meetings.map(m => `
+        <tr>
+          <td><strong>${m.topic}</strong></td>
+          <td>${m.scheduleDate} <br><small style="color:var(--muted)">${m.scheduleTime}</small></td>
+          <td><a href="${m.zoomUrl}" target="_blank" style="color:var(--green);font-size:12px;text-decoration:underline">Open Link ↗</a></td>
+          <td style="font-family:monospace">${m.meetingId || '—'}</td>
+          <td style="font-family:monospace;color:var(--green)">${m.passcode || '—'}</td>
+          <td><span class="badge ${m.status === 'active' ? 'badge-ok' : 'badge-warn'}">${m.status}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-action btn-outline" style="font-size:11px;padding:4px 8px" onclick="editZoomMeeting('${m.id}')">Edit</button>
+              <button class="btn-action btn-decline" style="font-size:11px;padding:4px 8px" onclick="deleteZoomMeeting('${m.id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openZoomModal(isEdit = false) {
+      document.getElementById('zoomModalTitle').textContent = isEdit ? 'Edit Zoom Meeting' : 'Create New Zoom Meeting';
+      document.getElementById('zoomModal').classList.add('open');
+    }
+
+    function closeZoomModal() {
+      document.getElementById('zoomModal').classList.remove('open');
+      document.getElementById('zoomEditId').value = '';
+    }
+
+    function editZoomMeeting(id) {
+      const m = window.RoverStore.getZoomMeetings().find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('zoomEditId').value = m.id;
+      document.getElementById('modalZoomTopic').value = m.topic;
+      document.getElementById('modalZoomDate').value = m.scheduleDate;
+      document.getElementById('modalZoomTime').value = m.scheduleTime;
+      document.getElementById('modalZoomUrl').value = m.zoomUrl;
+      document.getElementById('modalZoomId').value = m.meetingId || '';
+      document.getElementById('modalZoomPasscode').value = m.passcode || '';
+      document.getElementById('modalZoomInstructions').value = m.instructions || '';
+      openZoomModal(true);
+    }
+
+    async function saveZoomMeeting() {
+      const editId = document.getElementById('zoomEditId').value;
+      const topic = document.getElementById('modalZoomTopic').value.trim();
+      const date = document.getElementById('modalZoomDate').value.trim();
+      const time = document.getElementById('modalZoomTime').value.trim();
+      const url = document.getElementById('modalZoomUrl').value.trim();
+      const meetId = document.getElementById('modalZoomId').value.trim();
+      const pass = document.getElementById('modalZoomPasscode').value.trim();
+      const inst = document.getElementById('modalZoomInstructions').value.trim();
+
+      if (!topic || !url) {
+        toast('warning', 'Missing Fields', 'Please enter at least topic and Zoom URL.');
+        return;
+      }
+
+      const payload = {
+        topic,
+        scheduleDate: date,
+        scheduleTime: time,
+        zoomUrl: url,
+        meetingId: meetId,
+        passcode: pass,
+        instructions: inst,
+        status: 'active'
+      };
+
+      if (editId) {
+        await window.RoverStore.updateZoomMeeting(editId, payload);
+        toast('success', 'Zoom Meeting Updated', 'Meeting updated in cloud.');
+      } else {
+        await window.RoverStore.addZoomMeeting(payload);
+        toast('success', 'Zoom Meeting Created', 'New meeting added to student portal.');
+      }
+
+      closeZoomModal();
+      renderZoomTable();
+    }
+
+    async function deleteZoomMeeting(id) {
+      if (!confirm('Delete this Zoom meeting schedule?')) return;
+      await window.RoverStore.deleteZoomMeeting(id);
+      toast('info', 'Deleted', 'Zoom meeting removed.');
+      renderZoomTable();
+    }
+
+    // -------------------------------------------------------------
+    // 4. STUDENT PROGRESS MONITORING
+    // -------------------------------------------------------------
+    function renderProgressTable() {
+      const users = window.RoverStore.getUsers().filter(u => u.role === 'student');
+      const tbody = document.getElementById('progressTableBody');
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">No registered students found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const prog = window.RoverStore.getProgressForUser(u.id);
+        const pct = prog.overallProgress || 0;
+        const chList = (prog.chaptersCompleted || []).join(', ') || 'None';
+
+        return `
+          <tr>
+            <td style="font-family:monospace;color:var(--green)">${u.accountNumber}</td>
+            <td>
+              <strong>${u.firstName} ${u.lastName || ''}</strong>
+              <div style="font-size:11px;color:var(--muted)">${u.email}</div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="flex:1;background:var(--card-2);height:8px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+                  <div style="background:var(--green);height:100%;width:${pct}%"></div>
+                </div>
+                <strong style="font-size:12px;min-width:35px">${pct}%</strong>
+              </div>
+            </td>
+            <td><span class="badge badge-blue">Ch: ${chList}</span></td>
+            <td style="font-size:12px;color:var(--muted);max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              "${prog.instructorEvaluation || 'No evaluation written yet.'}"
+            </td>
+            <td>
+              <button class="btn-action btn-green" style="font-size:11px;padding:6px 12px" onclick="openProgressModal('${u.id}')">
+                Adjust & Send Report ↗
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openProgressModal(userId) {
+      const u = window.RoverStore.getUsers().find(x => x.id === userId);
+      const prog = window.RoverStore.getProgressForUser(userId);
+
+      document.getElementById('progUserIdInput').value = userId;
+      document.getElementById('progModalStudentLabel').textContent = `Student: ${u.firstName} ${u.lastName || ''} (${u.accountNumber})`;
+      document.getElementById('progSlider').value = prog.overallProgress || 0;
+      document.getElementById('progSliderLabel').textContent = (prog.overallProgress || 0) + '%';
+      document.getElementById('progNotesInput').value = prog.instructorEvaluation || '';
+
+      const completed = prog.chaptersCompleted || [];
+      document.getElementById('chCheck1').checked = completed.includes(1);
+      document.getElementById('chCheck2').checked = completed.includes(2);
+      document.getElementById('chCheck3').checked = completed.includes(3);
+      document.getElementById('chCheck4').checked = completed.includes(4);
+
+      document.getElementById('progressModal').classList.add('open');
+    }
+
+    function closeProgressModal() {
+      document.getElementById('progressModal').classList.remove('open');
+    }
+
+    async function saveProgressModalChanges() {
+      const userId = document.getElementById('progUserIdInput').value;
+      const pct = parseInt(document.getElementById('progSlider').value);
+      const notes = document.getElementById('progNotesInput').value.trim();
+
+      const chCompleted = [];
+      if (document.getElementById('chCheck1').checked) chCompleted.push(1);
+      if (document.getElementById('chCheck2').checked) chCompleted.push(2);
+      if (document.getElementById('chCheck3').checked) chCompleted.push(3);
+      if (document.getElementById('chCheck4').checked) chCompleted.push(4);
+
+      const u = window.RoverStore.getUsers().find(x => x.id === userId);
+
+      await window.RoverStore.saveProgressReport(userId, {
+        userId,
+        accountNumber: u ? u.accountNumber : 'RT10001',
+        studentName: u ? `${u.firstName} ${u.lastName || ''}`.trim() : 'Student',
+        overallProgress: pct,
+        chaptersCompleted: chCompleted,
+        instructorEvaluation: notes,
+        lastUpdated: new Date().toISOString()
+      });
+
+      toast('success', 'Progress Report Dispatched!', 'Student progress updated in cloud and visible on their Learners Portal.');
+      closeProgressModal();
+      renderProgressTable();
+    }
+
+    // -------------------------------------------------------------
+    // 5. MEMBERS DIRECTORY
+    // -------------------------------------------------------------
+    function renderMembersTable() {
+      const users = window.RoverStore.getUsers();
+      const tbody = document.getElementById('membersTableBody');
+
+      tbody.innerHTML = users.map(u => {
+        const isPaid = u.paymentStatus === 'paid';
+        const isUnderReview = u.paymentStatus === 'under_review';
+        let statusBadge = '';
+        if (isPaid) statusBadge = '<span class="badge badge-ok">Paid / Enrolled</span>';
+        else if (isUnderReview) statusBadge = '<span class="badge badge-warn">Under Review</span>';
+        else statusBadge = '<span class="badge badge-red">Unpaid</span>';
+
+        return `
+          <tr>
+            <td style="font-family:monospace;color:var(--green)">${u.accountNumber}</td>
+            <td><strong>${u.firstName} ${u.lastName || ''}</strong></td>
+            <td>${u.email}</td>
+            <td>${u.cellNumber || '—'}</td>
+            <td><span class="badge ${u.role === 'admin' ? 'badge-warn' : 'badge-blue'}">${u.role}</span></td>
+            <td>${statusBadge}</td>
+            <td>${new Date(u.createdAt || Date.now()).toLocaleDateString()}</td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-action ${isPaid ? 'btn-decline' : 'btn-accept'}" style="font-size:11px;padding:4px 8px" onclick="toggleUserPaid('${u.id}')">
+                  ${isPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleUserPaid(userId) {
+      const users = window.RoverStore.getUsers();
+      const idx = users.findIndex(u => u.id === userId);
+      if (idx === -1) return;
+
+      users[idx].paymentStatus = users[idx].paymentStatus === 'paid' ? 'unpaid' : 'paid';
+      window.RoverStore.saveUsers(users);
+      await window.RoverStore.syncUserToFirestore(users[idx]);
+      toast('info', 'Status Toggled', `User set to ${users[idx].paymentStatus}`);
+      renderMembersTable();
+    }
+
+    // -------------------------------------------------------------
+    // 6. COMMENT CONTROL PANEL
+    // -------------------------------------------------------------
+    function renderCommentsTable() {
+      const filter = document.getElementById('reviewFilterSelect').value;
+      const reviews = window.RoverStore.getReviews();
+
+      let filtered = reviews;
+      if (filter === 'visible') filtered = reviews.filter(r => !r.hidden && r.status !== 'hidden');
+      else if (filter === 'hidden') filtered = reviews.filter(r => r.hidden || r.status === 'hidden');
+      else if (filter === 'flagged') filtered = reviews.filter(r => r.status === 'flagged');
+
+      const tbody = document.getElementById('commentsTableBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">No comments found for "${filter}".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => {
+        const isHidden = r.hidden || r.status === 'hidden' || r.status === 'flagged';
+        let statusBadge = isHidden
+          ? '<span class="badge badge-warn">Hidden from Site</span>'
+          : '<span class="badge badge-ok">Live on Site</span>';
+
+        return `
+          <tr>
+            <td><strong>${r.name}</strong></td>
+            <td>${r.course}</td>
+            <td style="color:var(--gold)">${'★'.repeat(r.rating || 5)}</td>
+            <td style="max-width:320px;font-size:12px">"${r.text}"</td>
+            <td>${statusBadge}</td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-action ${isHidden ? 'btn-accept' : 'btn-decline'}" style="font-size:11px;padding:4px 8px" onclick="toggleReviewVisibility('${r.id}')">
+                  ${isHidden ? 'Show on Site' : 'Hide from Site'}
+                </button>
+                <button class="btn-action btn-decline" style="font-size:11px;padding:4px 8px" onclick="deleteReviewItem('${r.id}')">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleReviewVisibility(id) {
+      await window.RoverStore.toggleReviewVisibility(id);
+      toast('info', 'Visibility Updated', 'Comment display status changed in cloud.');
+      renderCommentsTable();
+    }
+
+    async function deleteReviewItem(id) {
+      if (!confirm('Permanently delete this comment from the cloud?')) return;
+      await window.RoverStore.deleteReview(id);
+      toast('info', 'Comment Deleted', 'Comment removed from Firestore.');
+      renderCommentsTable();
+    }
+
+    // Real-Time Listeners for Admin Center
+    if (typeof db !== 'undefined' && db.collection) {
+      db.collection('applications').onSnapshot(snap => {
+        if (!snap.empty) {
+          const cloudApps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          window.RoverStore.saveApplications(cloudApps);
+          renderPopsTable();
+        }
+      });
+
+      db.collection('users').onSnapshot(snap => {
+        if (!snap.empty) {
+          const cloudUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          window.RoverStore.saveUsers(cloudUsers);
+          renderMembersTable();
+        }
+      });
+
+      db.collection('reviews').onSnapshot(snap => {
+        if (!snap.empty) {
+          const cloudRevs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          window.RoverStore.saveReviews(cloudRevs);
+          renderCommentsTable();
+        }
+      });
+
+      db.collection('zoom_meetings').onSnapshot(snap => {
+        if (!snap.empty) {
+          const cloudZoom = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          window.RoverStore.saveZoomMeetings(cloudZoom);
+          renderZoomTable();
+        }
+      });
+
+      db.collection('progress_reports').onSnapshot(snap => {
+        if (!snap.empty) {
+          const cloudProg = snap.docs.map(d => ({ userId: d.id, ...d.data() }));
+          window.RoverStore.saveProgressReports(cloudProg);
+          renderProgressTable();
+        }
+      });
+    }
+
+    // Initialize View
+    renderPopsTable();
+  </script>
+</body>
+</html>
