@@ -40,15 +40,13 @@ const firebaseConfig = {
   recaptchaSiteKey: ""
 };
 
-// Initialize App & Services with local cache & fast channel
+// Initialize App & Services with direct WebChannel connection (preventing IndexedDB multi-tab lock deadlocks on external hosts/GitHub Pages)
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 let firestoreDb;
 try {
-  firestoreDb = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-  }, firebaseConfig.firestoreDatabaseId);
-} catch (e) {
   firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+} catch (e) {
+  firestoreDb = initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId);
 }
 const authInstance = getAuth(app);
 
@@ -167,8 +165,11 @@ const SEED_ZOOM_MEETINGS = [
     meetingId: "849 2049 1823",
     passcode: "ROVER2025",
     status: "active",
+    isPrimary: true,
     instructor: "Lethabo Loate",
-    instructions: "Join 5 minutes prior with TradingView open. Review daily candlestick closures."
+    instructions: "Join 5 minutes prior with TradingView open. Review daily candlestick closures.",
+    createdAt: "2025-01-01T00:00:00.000Z",
+    updatedAt: "2025-01-01T00:00:00.000Z"
   },
   {
     id: "zoom_2",
@@ -179,8 +180,11 @@ const SEED_ZOOM_MEETINGS = [
     meetingId: "918 2348 1029",
     passcode: "MARKETPREP",
     status: "active",
+    isPrimary: false,
     instructor: "Lethabo Loate",
-    instructions: "Weekly economic calendar analysis and multi-timeframe liquidity marking."
+    instructions: "Weekly economic calendar analysis and multi-timeframe liquidity marking.",
+    createdAt: "2025-01-02T00:00:00.000Z",
+    updatedAt: "2025-01-02T00:00:00.000Z"
   }
 ];
 
@@ -733,10 +737,37 @@ export const RoverStore = {
   // -----------------------------------------------------------
   getLearningContent: function() {
     try {
-      return JSON.parse(localStorage.getItem('roverLearningDoc')) || DEFAULT_LEARNING_DOCUMENT;
+      const docData = JSON.parse(localStorage.getItem('roverLearningDoc')) || DEFAULT_LEARNING_DOCUMENT;
+      if (docData.docType === 'pdf' && !docData.pdfDataUrl && window._cachedLearningPdfUrl) {
+        docData.pdfDataUrl = window._cachedLearningPdfUrl;
+      }
+      return docData;
     } catch {
       return DEFAULT_LEARNING_DOCUMENT;
     }
+  },
+
+  loadFullLearningDoc: async function() {
+    let docData = this.getLearningContent();
+    if (docData.docType === 'pdf' && docData.chunked && !docData.pdfDataUrl) {
+      if (window._cachedLearningPdfUrl) {
+        docData.pdfDataUrl = window._cachedLearningPdfUrl;
+        return docData;
+      }
+      try {
+        const chunkPromises = [];
+        for (let i = 0; i < (docData.chunkCount || 1); i++) {
+          chunkPromises.push(getDoc(doc(firestoreDb, 'learning_content', 'master_curriculum', 'chunks', 'chunk_' + i)));
+        }
+        const chunkSnaps = await Promise.all(chunkPromises);
+        const fullDataUrl = chunkSnaps.map(s => s.exists() ? s.data().data : '').join('');
+        docData.pdfDataUrl = fullDataUrl;
+        window._cachedLearningPdfUrl = fullDataUrl;
+      } catch (e) {
+        console.warn("Error reassembling chunked PDF:", e);
+      }
+    }
+    return docData;
   },
 
   saveLearningContent: async function(docData) {
@@ -766,11 +797,17 @@ export const RoverStore = {
 
   uploadLearningPdf: async function({ pdfDataUrl, pdfFileName, pdfFileSize, title, subtitle }) {
     const current = this.getLearningContent();
-    const updated = {
+    const isLarge = pdfDataUrl && pdfDataUrl.length > 700000;
+    const chunkSize = 450000;
+    const chunkCount = isLarge ? Math.ceil(pdfDataUrl.length / chunkSize) : 1;
+
+    const metadataDoc = {
       ...current,
       id: "master_curriculum",
       docType: 'pdf',
-      pdfDataUrl: pdfDataUrl,
+      chunked: isLarge,
+      chunkCount: chunkCount,
+      pdfDataUrl: isLarge ? null : pdfDataUrl,
       pdfFileName: pdfFileName || 'Rover_Trading_Handbook.pdf',
       pdfFileSize: pdfFileSize || 'Protected PDF',
       title: title || current.title || 'Rover Trading Master Curriculum & Execution Blueprint',
@@ -779,32 +816,49 @@ export const RoverStore = {
       updatedBy: 'Admin Lethabo Loate'
     };
 
+    window._cachedLearningPdfUrl = pdfDataUrl;
     try {
-      localStorage.setItem('roverLearningDoc', JSON.stringify(updated));
+      localStorage.setItem('roverLearningDoc', JSON.stringify({
+        ...metadataDoc,
+        pdfDataUrl: isLarge ? null : pdfDataUrl
+      }));
     } catch (e) {
       console.warn("Storage save PDF document note:", e);
     }
 
     try {
-      const writePromise = setDoc(doc(firestoreDb, 'learning_content', 'master_curriculum'), updated);
+      if (isLarge) {
+        console.log(`Firestore cloud: Uploading ${chunkCount} chunks for large PDF...`);
+        for (let i = 0; i < chunkCount; i++) {
+          const chunkStr = pdfDataUrl.slice(i * chunkSize, (i + 1) * chunkSize);
+          await setDoc(doc(firestoreDb, 'learning_content', 'master_curriculum', 'chunks', 'chunk_' + i), {
+            index: i,
+            data: chunkStr
+          });
+        }
+      }
+      const writePromise = setDoc(doc(firestoreDb, 'learning_content', 'master_curriculum'), metadataDoc);
       await Promise.race([
         writePromise,
-        new Promise(r => setTimeout(r, 1000))
+        new Promise(r => setTimeout(r, 1200))
       ]);
       console.log("Firestore cloud: PDF Learning Document published & synced!");
     } catch (e) {
       console.warn("Firestore PDF doc save error:", e);
     }
-    return updated;
+    return { ...metadataDoc, pdfDataUrl };
   },
 
   removeLearningPdf: async function() {
     const current = this.getLearningContent();
     current.docType = 'rich_text';
+    current.chunked = false;
+    current.chunkCount = 0;
     current.pdfDataUrl = null;
     current.pdfFileName = null;
     current.pdfFileSize = null;
     current.lastUpdated = new Date().toISOString();
+    window._cachedLearningPdfUrl = null;
 
     try {
       localStorage.setItem('roverLearningDoc', JSON.stringify(current));
@@ -828,11 +882,18 @@ export const RoverStore = {
   },
 
   // -----------------------------------------------------------
-  // ZOOM MEETING LINKS (Cloud Synced)
+  // ZOOM MEETING LINKS (Dual-Channel Cloud Synced: SDK + REST)
   // -----------------------------------------------------------
   getZoomMeetings: function() {
     try {
-      return JSON.parse(localStorage.getItem('roverZoomMeetings')) || SEED_ZOOM_MEETINGS;
+      const raw = JSON.parse(localStorage.getItem('roverZoomMeetings')) || SEED_ZOOM_MEETINGS;
+      return [...raw].sort((a, b) => {
+        if (a.isPrimary && !b.isPrimary) return -1;
+        if (!a.isPrimary && b.isPrimary) return 1;
+        const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
     } catch {
       return SEED_ZOOM_MEETINGS;
     }
@@ -840,30 +901,138 @@ export const RoverStore = {
 
   saveZoomMeetings: function(list) {
     try {
-      localStorage.setItem('roverZoomMeetings', JSON.stringify(list));
+      const sorted = [...list].sort((a, b) => {
+        if (a.isPrimary && !b.isPrimary) return -1;
+        if (!a.isPrimary && b.isPrimary) return 1;
+        const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
+      localStorage.setItem('roverZoomMeetings', JSON.stringify(sorted));
+      try {
+        window.dispatchEvent(new CustomEvent('roverZoomMeetingsUpdated', { detail: sorted }));
+      } catch (e) {}
     } catch (e) {}
+  },
+
+  // Merges incoming cloud meetings without wiping out freshly created local meetings
+  saveZoomMeetingsFromCloud: function(cloudList) {
+    if (!cloudList || !Array.isArray(cloudList)) return this.getZoomMeetings();
+    const localList = this.getZoomMeetings();
+    const map = new Map();
+    // 1. Keep local meetings in map
+    localList.forEach(m => {
+      if (m && m.id) map.set(m.id, m);
+    });
+    // 2. Overlay confirmed cloud documents
+    cloudList.forEach(m => {
+      if (m && m.id) {
+        const existing = map.get(m.id) || {};
+        map.set(m.id, { ...existing, ...m });
+      }
+    });
+    const merged = Array.from(map.values());
+    this.saveZoomMeetings(merged);
+    return merged;
+  },
+
+  syncZoomMeetingsFromFirestore: async function() {
+    try {
+      const snap = await Promise.race([
+        getDocs(collection(firestoreDb, 'zoom_meetings')),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500))
+      ]);
+      if (snap && !snap.empty) {
+        const cloudZoom = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return this.saveZoomMeetingsFromCloud(cloudZoom);
+      }
+    } catch (e) {
+      // Fallback: Direct HTTPS REST query (works regardless of browser WebSocket restrictions or GitHub Pages)
+      try {
+        const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/zoom_meetings?key=${firebaseConfig.apiKey}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.documents && Array.isArray(json.documents)) {
+            const parsed = json.documents.map(docItem => {
+              const obj = { id: docItem.name.split('/').pop() };
+              for (const [k, v] of Object.entries(docItem.fields || {})) {
+                obj[k] = v.stringValue !== undefined ? v.stringValue : 
+                         v.booleanValue !== undefined ? v.booleanValue : 
+                         v.integerValue !== undefined ? Number(v.integerValue) : v;
+              }
+              return obj;
+            });
+            return this.saveZoomMeetingsFromCloud(parsed);
+          }
+        }
+      } catch (err) {}
+    }
+    return this.getZoomMeetings();
   },
 
   addZoomMeeting: async function(data) {
     const list = this.getZoomMeetings();
+    let formattedUrl = (data.zoomUrl || 'https://zoom.us').trim();
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+    const now = new Date().toISOString();
     const newMeeting = {
       id: data.id || 'zoom_' + Date.now(),
-      topic: data.topic || 'Rover Trading Live Session',
-      scheduleDate: data.scheduleDate || 'Scheduled Day',
-      scheduleTime: data.scheduleTime || '18:00 SAST',
-      zoomUrl: data.zoomUrl || 'https://zoom.us',
-      meetingId: data.meetingId || '',
-      passcode: data.passcode || '',
-      status: 'active',
-      instructor: data.instructor || 'Lethabo Loate',
-      instructions: data.instructions || 'Review the daily charts prior to joining.'
+      topic: (data.topic || 'Rover Trading Live Session').trim(),
+      scheduleDate: (data.scheduleDate || 'Scheduled Day').trim(),
+      scheduleTime: (data.scheduleTime || '18:00 SAST').trim(),
+      zoomUrl: formattedUrl,
+      meetingId: (data.meetingId || '').trim(),
+      passcode: (data.passcode || '').trim(),
+      status: data.status || 'active',
+      isPrimary: data.isPrimary !== undefined ? !!data.isPrimary : true,
+      instructor: (data.instructor || 'Lethabo Loate').trim(),
+      instructions: (data.instructions || 'Review the daily charts prior to joining.').trim(),
+      createdAt: data.createdAt || now,
+      updatedAt: now
     };
-    list.unshift(newMeeting);
-    this.saveZoomMeetings(list);
+
+    let updatedList = list;
+    if (newMeeting.isPrimary) {
+      updatedList = updatedList.map(m => ({ ...m, isPrimary: false }));
+    }
+    updatedList.unshift(newMeeting);
+    this.saveZoomMeetings(updatedList);
+
+    // Guaranteed Dual-Channel write:
+    // 1. Direct HTTPS REST PATCH (instant 100ms HTTP POST, works reliably on published web & GitHub Pages)
+    const restPromise = (async () => {
+      try {
+        const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/zoom_meetings/${newMeeting.id}?key=${firebaseConfig.apiKey}`;
+        const fields = {};
+        for (const [k, v] of Object.entries(newMeeting)) {
+          if (typeof v === 'boolean') fields[k] = { booleanValue: v };
+          else if (typeof v === 'number') fields[k] = { integerValue: String(v) };
+          else if (v !== null && v !== undefined) fields[k] = { stringValue: String(v) };
+        }
+        const res = await fetch(url, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields })
+        });
+        if (res.ok) console.log("Firestore REST write confirmed:", newMeeting.id);
+      } catch (err) {
+        console.warn("Firestore REST write note:", err);
+      }
+    })();
+
+    // 2. Modular SDK write
+    const sdkPromise = setDoc(doc(firestoreDb, 'zoom_meetings', newMeeting.id), newMeeting).catch(err => {
+      console.warn("Firestore SDK write note:", err);
+    });
 
     try {
-      const writePromise = setDoc(doc(firestoreDb, 'zoom_meetings', newMeeting.id), newMeeting);
-      await Promise.race([writePromise, new Promise(r => setTimeout(r, 800))]);
+      await Promise.race([
+        Promise.all([restPromise, sdkPromise]),
+        new Promise(r => setTimeout(r, 2500))
+      ]);
       console.log("Firestore cloud: Zoom meeting created", newMeeting.id);
     } catch (e) {
       console.warn("Firestore zoom create error:", e);
@@ -872,21 +1041,69 @@ export const RoverStore = {
   },
 
   updateZoomMeeting: async function(id, data) {
-    const list = this.getZoomMeetings();
+    let list = this.getZoomMeetings();
     const idx = list.findIndex(m => m.id === id);
     if (idx === -1) return null;
 
-    list[idx] = { ...list[idx], ...data };
+    let formattedUrl = list[idx].zoomUrl;
+    if (data.zoomUrl) {
+      formattedUrl = data.zoomUrl.trim();
+      if (!/^https?:\/\//i.test(formattedUrl)) {
+        formattedUrl = 'https://' + formattedUrl;
+      }
+    }
+
+    const updatedMeeting = {
+      ...list[idx],
+      ...data,
+      zoomUrl: formattedUrl,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (data.isPrimary) {
+      list = list.map(m => m.id === id ? updatedMeeting : { ...m, isPrimary: false });
+    } else {
+      list[idx] = updatedMeeting;
+    }
+
     this.saveZoomMeetings(list);
 
+    // Guaranteed Dual-Channel update:
+    // 1. Direct REST PATCH
+    const restPromise = (async () => {
+      try {
+        const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/zoom_meetings/${id}?key=${firebaseConfig.apiKey}`;
+        const fields = {};
+        for (const [k, v] of Object.entries(updatedMeeting)) {
+          if (typeof v === 'boolean') fields[k] = { booleanValue: v };
+          else if (typeof v === 'number') fields[k] = { integerValue: String(v) };
+          else if (v !== null && v !== undefined) fields[k] = { stringValue: String(v) };
+        }
+        await fetch(url, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields })
+        });
+      } catch (err) {}
+    })();
+
+    // 2. Modular SDK write
+    const sdkPromise = setDoc(doc(firestoreDb, 'zoom_meetings', id), updatedMeeting, { merge: true }).catch(() => {});
+
     try {
-      const writePromise = setDoc(doc(firestoreDb, 'zoom_meetings', id), list[idx], { merge: true });
-      await Promise.race([writePromise, new Promise(r => setTimeout(r, 800))]);
+      await Promise.race([
+        Promise.all([restPromise, sdkPromise]),
+        new Promise(r => setTimeout(r, 2500))
+      ]);
       console.log("Firestore cloud: Zoom meeting updated", id);
     } catch (e) {
       console.warn("Firestore zoom update error:", e);
     }
-    return list[idx];
+    return updatedMeeting;
+  },
+
+  setPrimaryZoomMeeting: async function(id) {
+    return this.updateZoomMeeting(id, { isPrimary: true, status: 'active' });
   },
 
   deleteZoomMeeting: async function(id) {
@@ -894,15 +1111,26 @@ export const RoverStore = {
     list = list.filter(m => m.id !== id);
     this.saveZoomMeetings(list);
 
+    // Guaranteed Dual-Channel delete:
+    // 1. Direct REST DELETE
+    (async () => {
+      try {
+        const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/zoom_meetings/${id}?key=${firebaseConfig.apiKey}`;
+        await fetch(url, { method: 'DELETE' });
+      } catch (e) {}
+    })();
+
+    // 2. Modular SDK delete
     try {
       const writePromise = deleteDoc(doc(firestoreDb, 'zoom_meetings', id));
-      await Promise.race([writePromise, new Promise(r => setTimeout(r, 800))]);
+      await Promise.race([writePromise, new Promise(r => setTimeout(r, 2500))]);
       console.log("Firestore cloud: Zoom meeting deleted", id);
     } catch (e) {
       console.warn("Firestore zoom delete error:", e);
     }
     return true;
   },
+
 
   // -----------------------------------------------------------
   // STUDENT PROGRESS REPORTS & MONITORING (Cloud Synced)
@@ -1138,21 +1366,21 @@ window.db = {
   })
 };
 
-authInstance.signInWithPopup = (prov) => signInWithPopup(authInstance, prov);
-authInstance.signOut = () => signOut(authInstance);
-authInstance.onAuthStateChanged = (cb) => onAuthStateChanged(authInstance, cb);
+if (!authInstance.signInWithPopup) {
+  authInstance.signInWithPopup = (prov) => signInWithPopup(authInstance, prov);
+}
 
 window.auth = authInstance;
 window.GoogleAuthProvider = GoogleAuthProvider;
 window.signInWithPopup = (prov) => signInWithPopup(authInstance, prov);
-window.signOut = () => signOut(authInstance);
+window.signOut = () => authInstance.signOut();
 
 window.firebase = {
   app: () => app,
   auth: {
     GoogleAuthProvider: GoogleAuthProvider,
     signInWithPopup: (prov) => signInWithPopup(authInstance, prov),
-    signOut: () => signOut(authInstance)
+    signOut: () => authInstance.signOut()
   },
   firestore: {
     FieldValue: {
@@ -1230,7 +1458,7 @@ setTimeout(() => {
         }
       } else if (!snap.empty) {
         const cloudZoom = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        RoverStore.saveZoomMeetings(cloudZoom);
+        RoverStore.saveZoomMeetingsFromCloud(cloudZoom);
       }
     }, err => console.warn("Zoom sync note:", err));
 

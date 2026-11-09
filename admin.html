@@ -573,7 +573,7 @@
   <!-- Zoom Meeting Create/Edit Modal -->
   <div class="modal-backdrop" id="zoomModal">
     <div class="modal-box">
-      <button style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px" onclick="closeZoomModal()">✕</button>
+      <button style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;" onclick="closeZoomModal()">✕</button>
       <h3 style="font-family:'Manrope',sans-serif;font-size:20px;font-weight:800;margin-bottom:16px;" id="zoomModalTitle">Create Zoom Meeting</h3>
 
       <input type="hidden" id="zoomEditId">
@@ -592,8 +592,9 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Zoom Meeting URL</label>
-        <input type="url" id="modalZoomUrl" class="form-control" placeholder="https://zoom.us/j/..." required>
+        <label>Zoom Meeting URL (Paste full Zoom link or invite)</label>
+        <input type="text" id="modalZoomUrl" class="form-control" placeholder="https://zoom.us/j/84920491823?pwd=..." required oninput="parseZoomUrlInput(this.value)">
+        <small style="font-size:11px;color:var(--muted);margin-top:4px;display:block;">Tip: Pasting a Zoom link automatically extracts Meeting ID and Passcode.</small>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="form-group">
@@ -605,13 +606,34 @@
           <input type="text" id="modalZoomPasscode" class="form-control" placeholder="ROVER2025">
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="form-group">
+          <label>Instructor</label>
+          <input type="text" id="modalZoomInstructor" class="form-control" placeholder="Lethabo Loate" value="Lethabo Loate">
+        </div>
+        <div class="form-group">
+          <label>Display Status</label>
+          <select id="modalZoomStatus" class="form-control">
+            <option value="active">Active (Visible to Students)</option>
+            <option value="scheduled">Upcoming Scheduled</option>
+            <option value="paused">Paused / Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(255,255,255,0.02);padding:10px 12px;border-radius:8px;border:1px solid var(--border);">
+          <input type="checkbox" id="modalZoomPrimary" style="accent-color:var(--green);width:16px;height:16px;" checked>
+          <span style="font-size:13px;color:#fff;font-weight:600;">Set as Primary Featured Class (Shown front & center on student dashboard)</span>
+        </label>
+      </div>
       <div class="form-group">
         <label>Instructor Instructions for Students</label>
         <textarea id="modalZoomInstructions" class="form-control" rows="2" placeholder="Join 5 minutes prior with TradingView ready..."></textarea>
       </div>
-      <button class="btn-action btn-green" style="width:100%;padding:12px;font-size:14px;" onclick="saveZoomMeeting()">Save Zoom Meeting ↗</button>
+      <button class="btn-action btn-green" id="btnSaveZoom" style="width:100%;padding:13px;font-size:14px;" onclick="saveZoomMeeting()">Save Zoom Meeting ↗</button>
     </div>
   </div>
+
 
   <!-- Student Progress Edit Modal -->
   <div class="modal-backdrop" id="progressModal">
@@ -683,7 +705,12 @@
 
       if (tabId === 'pops') renderPopsTable();
       if (tabId === 'learningDoc') renderLearningDocEditor();
-      if (tabId === 'zoom') renderZoomTable();
+      if (tabId === 'zoom') {
+        renderZoomTable();
+        if (window.RoverStore && window.RoverStore.syncZoomMeetingsFromFirestore) {
+          window.RoverStore.syncZoomMeetingsFromFirestore().then(() => renderZoomTable());
+        }
+      }
       if (tabId === 'progress') renderProgressTable();
       if (tabId === 'members') renderMembersTable();
       if (tabId === 'comments') renderCommentsTable();
@@ -691,7 +718,11 @@
 
     function logout() {
       window.RoverStore.setCurrentUser(null);
-      if (window.auth && window.auth.signOut) window.auth.signOut();
+      try {
+        if (window.auth && typeof window.auth.signOut === 'function') {
+          window.auth.signOut();
+        }
+      } catch (e) {}
       window.location.href = 'login.html';
     }
 
@@ -828,22 +859,26 @@
 
           if (!file) return;
 
-          if (file.size > 750 * 1024) {
-            toast('warning', 'PDF Too Large', 'Please upload a PDF under 750KB for direct cloud sync (current size: ' + (file.size/1024).toFixed(0) + ' KB).');
+          if (file.size > 10 * 1024 * 1024) {
+            toast('warning', 'PDF Too Large', 'Please upload a PDF under 10MB (current size: ' + (file.size/(1024*1024)).toFixed(1) + ' MB).');
             e.target.value = '';
             return;
           }
+
+          const sizeStr = file.size >= 1024 * 1024
+            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+            : (file.size / 1024).toFixed(0) + ' KB';
 
           const reader = new FileReader();
           reader.onload = function(evt) {
             stagedPdfData = {
               pdfDataUrl: evt.target.result,
               pdfFileName: file.name,
-              pdfFileSize: (file.size / 1024).toFixed(0) + ' KB'
+              pdfFileSize: sizeStr
             };
 
             document.getElementById('adminStagedPdfName').textContent = file.name;
-            document.getElementById('adminStagedPdfSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+            document.getElementById('adminStagedPdfSize').textContent = sizeStr;
             document.getElementById('adminStagedPdfPreview').src = `${evt.target.result}#toolbar=0`;
             stagedWrap.style.display = 'block';
             uploadBtn.disabled = false;
@@ -985,32 +1020,76 @@
       const meetings = window.RoverStore.getZoomMeetings();
       const tbody = document.getElementById('zoomTableBody');
 
+      if (!tbody) return;
       if (meetings.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No Zoom meetings scheduled. Click "+ Create New Zoom Meeting".</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = meetings.map(m => `
+      tbody.innerHTML = meetings.map(m => {
+        let cleanUrl = m.zoomUrl || 'https://zoom.us';
+        if (!/^https?:\/\//i.test(cleanUrl)) cleanUrl = 'https://' + cleanUrl;
+        const isPrimary = !!m.isPrimary;
+        return `
         <tr>
-          <td><strong>${m.topic}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <strong>${m.topic}</strong>
+              ${isPrimary ? '<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(163,230,53,0.15);border:1px solid rgba(163,230,53,0.3);padding:1px 6px;border-radius:10px;">★ Primary</span>' : ''}
+            </div>
+            <small style="color:var(--muted)">Instructor: ${m.instructor || 'Lethabo Loate'}</small>
+          </td>
           <td>${m.scheduleDate} <br><small style="color:var(--muted)">${m.scheduleTime}</small></td>
-          <td><a href="${m.zoomUrl}" target="_blank" style="color:var(--green);font-size:12px;text-decoration:underline">Open Link ↗</a></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--green);font-size:12px;text-decoration:underline">Test Link ↗</a>
+              <button class="copy-pill" style="font-size:10px;padding:2px 6px;" onclick="copyText('${cleanUrl}')">Copy</button>
+            </div>
+          </td>
           <td style="font-family:monospace">${m.meetingId || '—'}</td>
           <td style="font-family:monospace;color:var(--green)">${m.passcode || '—'}</td>
-          <td><span class="badge ${m.status === 'active' ? 'badge-ok' : 'badge-warn'}">${m.status}</span></td>
           <td>
-            <div style="display:flex;gap:6px;">
+            <span class="badge ${m.status === 'active' ? 'badge-ok' : m.status === 'scheduled' ? 'badge-pending' : 'badge-warn'}">
+              ${m.status === 'active' ? '● Active' : m.status === 'scheduled' ? '⏳ Scheduled' : 'Paused'}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${!isPrimary ? `<button class="btn-action btn-outline" style="font-size:11px;padding:4px 8px;color:var(--green);border-color:var(--green);" onclick="setPrimaryZoom('${m.id}')" title="Set this meeting as the primary featured session on the student dashboard">★ Set Primary</button>` : ''}
               <button class="btn-action btn-outline" style="font-size:11px;padding:4px 8px" onclick="editZoomMeeting('${m.id}')">Edit</button>
               <button class="btn-action btn-decline" style="font-size:11px;padding:4px 8px" onclick="deleteZoomMeeting('${m.id}')">Delete</button>
             </div>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     }
 
     function openZoomModal(isEdit = false) {
       document.getElementById('zoomModalTitle').textContent = isEdit ? 'Edit Zoom Meeting' : 'Create New Zoom Meeting';
+      if (!isEdit) {
+        document.getElementById('zoomEditId').value = '';
+        document.getElementById('modalZoomTopic').value = '';
+        document.getElementById('modalZoomDate').value = 'Every Tuesday & Thursday';
+        document.getElementById('modalZoomTime').value = '18:00 - 19:30 SAST';
+        document.getElementById('modalZoomUrl').value = '';
+        document.getElementById('modalZoomId').value = '';
+        document.getElementById('modalZoomPasscode').value = '';
+        if (document.getElementById('modalZoomInstructor')) {
+          document.getElementById('modalZoomInstructor').value = 'Lethabo Loate';
+        }
+        if (document.getElementById('modalZoomStatus')) {
+          document.getElementById('modalZoomStatus').value = 'active';
+        }
+        if (document.getElementById('modalZoomPrimary')) {
+          document.getElementById('modalZoomPrimary').checked = true;
+        }
+        document.getElementById('modalZoomInstructions').value = 'Join 5 minutes prior with TradingView open. Review daily candlestick closures.';
+      }
       document.getElementById('zoomModal').classList.add('open');
+      setTimeout(() => {
+        const topEl = document.getElementById('modalZoomTopic');
+        if (topEl) topEl.focus();
+      }, 100);
     }
 
     function closeZoomModal() {
@@ -1018,18 +1097,54 @@
       document.getElementById('zoomEditId').value = '';
     }
 
+    function parseZoomUrlInput(raw) {
+      if (!raw) return;
+      // Extract meeting ID from /j/123456789 or Meeting ID: 123 456 789
+      const idMatch = raw.match(/\/j\/(\d+)/i) || raw.match(/id[:= ]+(\d[\d\s]+)/i);
+      if (idMatch && idMatch[1]) {
+        const cleanId = idMatch[1].replace(/(\d{3,4})(?=\d)/g, '$1 ').trim();
+        const idInput = document.getElementById('modalZoomId');
+        if (idInput && !idInput.value) idInput.value = cleanId;
+      }
+      // Extract passcode from ?pwd=xyz or Passcode: xyz
+      const pwdMatch = raw.match(/[?&]pwd=([^&\s]+)/i) || raw.match(/passcode[:= ]+([^\s\n]+)/i);
+      if (pwdMatch && pwdMatch[1]) {
+        const passInput = document.getElementById('modalZoomPasscode');
+        if (passInput && !passInput.value) passInput.value = pwdMatch[1].trim();
+      }
+    }
+
     function editZoomMeeting(id) {
       const m = window.RoverStore.getZoomMeetings().find(x => x.id === id);
       if (!m) return;
       document.getElementById('zoomEditId').value = m.id;
-      document.getElementById('modalZoomTopic').value = m.topic;
-      document.getElementById('modalZoomDate').value = m.scheduleDate;
-      document.getElementById('modalZoomTime').value = m.scheduleTime;
-      document.getElementById('modalZoomUrl').value = m.zoomUrl;
+      document.getElementById('modalZoomTopic').value = m.topic || '';
+      document.getElementById('modalZoomDate').value = m.scheduleDate || '';
+      document.getElementById('modalZoomTime').value = m.scheduleTime || '';
+      document.getElementById('modalZoomUrl').value = m.zoomUrl || '';
       document.getElementById('modalZoomId').value = m.meetingId || '';
       document.getElementById('modalZoomPasscode').value = m.passcode || '';
+      if (document.getElementById('modalZoomInstructor')) {
+        document.getElementById('modalZoomInstructor').value = m.instructor || 'Lethabo Loate';
+      }
+      if (document.getElementById('modalZoomStatus')) {
+        document.getElementById('modalZoomStatus').value = m.status || 'active';
+      }
+      if (document.getElementById('modalZoomPrimary')) {
+        document.getElementById('modalZoomPrimary').checked = !!m.isPrimary;
+      }
       document.getElementById('modalZoomInstructions').value = m.instructions || '';
       openZoomModal(true);
+    }
+
+    async function setPrimaryZoom(id) {
+      try {
+        await window.RoverStore.setPrimaryZoomMeeting(id);
+        toast('success', 'Primary Meeting Set', 'This meeting is now featured on the student dashboard.');
+        renderZoomTable();
+      } catch (err) {
+        toast('error', 'Error', 'Could not update primary meeting.');
+      }
     }
 
     async function saveZoomMeeting() {
@@ -1037,45 +1152,87 @@
       const topic = document.getElementById('modalZoomTopic').value.trim();
       const date = document.getElementById('modalZoomDate').value.trim();
       const time = document.getElementById('modalZoomTime').value.trim();
-      const url = document.getElementById('modalZoomUrl').value.trim();
+      let url = document.getElementById('modalZoomUrl').value.trim();
       const meetId = document.getElementById('modalZoomId').value.trim();
       const pass = document.getElementById('modalZoomPasscode').value.trim();
       const inst = document.getElementById('modalZoomInstructions').value.trim();
+      const instructor = (document.getElementById('modalZoomInstructor') ? document.getElementById('modalZoomInstructor').value.trim() : '') || 'Lethabo Loate';
+      const status = document.getElementById('modalZoomStatus') ? document.getElementById('modalZoomStatus').value : 'active';
+      const isPrimary = document.getElementById('modalZoomPrimary') ? document.getElementById('modalZoomPrimary').checked : false;
 
-      if (!topic || !url) {
-        toast('warning', 'Missing Fields', 'Please enter at least topic and Zoom URL.');
+      if (!topic) {
+        toast('warning', 'Missing Topic', 'Please enter a topic or title for this Zoom class.');
+        document.getElementById('modalZoomTopic').focus();
         return;
+      }
+
+      if (!url) {
+        toast('warning', 'Missing Link', 'Please enter the Zoom meeting link.');
+        document.getElementById('modalZoomUrl').focus();
+        return;
+      }
+
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
+
+      const btn = document.getElementById('btnSaveZoom');
+      const origText = btn ? btn.textContent : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving to Cloud...';
       }
 
       const payload = {
         topic,
-        scheduleDate: date,
-        scheduleTime: time,
+        scheduleDate: date || 'Scheduled Session',
+        scheduleTime: time || '18:00 SAST',
         zoomUrl: url,
         meetingId: meetId,
         passcode: pass,
+        instructor,
         instructions: inst,
-        status: 'active'
+        status,
+        isPrimary
       };
 
-      if (editId) {
-        await window.RoverStore.updateZoomMeeting(editId, payload);
-        toast('success', 'Zoom Meeting Updated', 'Meeting updated in cloud.');
-      } else {
-        await window.RoverStore.addZoomMeeting(payload);
-        toast('success', 'Zoom Meeting Created', 'New meeting added to student portal.');
+      try {
+        if (editId) {
+          await window.RoverStore.updateZoomMeeting(editId, payload);
+          toast('success', 'Zoom Meeting Updated', 'Meeting updated in cloud and active on student portals.');
+        } else {
+          await window.RoverStore.addZoomMeeting(payload);
+          toast('success', 'Zoom Meeting Saved', 'New Zoom meeting created and published to students.');
+        }
+        closeZoomModal();
+        renderZoomTable();
+      } catch (err) {
+        console.error("Save zoom error:", err);
+        toast('error', 'Save Error', 'Could not save Zoom link. Please try again.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = origText;
+        }
       }
-
-      closeZoomModal();
-      renderZoomTable();
     }
 
     async function deleteZoomMeeting(id) {
       if (!confirm('Delete this Zoom meeting schedule?')) return;
-      await window.RoverStore.deleteZoomMeeting(id);
-      toast('info', 'Deleted', 'Zoom meeting removed.');
-      renderZoomTable();
+      try {
+        await window.RoverStore.deleteZoomMeeting(id);
+        toast('info', 'Deleted', 'Zoom meeting removed.');
+        renderZoomTable();
+      } catch (err) {
+        toast('error', 'Delete Error', 'Could not delete Zoom meeting.');
+      }
     }
+
+    // Live update when zoom meetings change in background
+    window.addEventListener('roverZoomMeetingsUpdated', () => {
+      renderZoomTable();
+    });
+
 
     // -------------------------------------------------------------
     // 4. STUDENT PROGRESS MONITORING
@@ -1310,7 +1467,7 @@
       db.collection('zoom_meetings').onSnapshot(snap => {
         if (!snap.empty) {
           const cloudZoom = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          window.RoverStore.saveZoomMeetings(cloudZoom);
+          window.RoverStore.saveZoomMeetingsFromCloud(cloudZoom);
           renderZoomTable();
         }
       });

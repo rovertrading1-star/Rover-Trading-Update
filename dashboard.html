@@ -718,7 +718,7 @@
 
       <!-- Unlocked State Content -->
       <div id="learnersUnlockedContent" style="display:none">
-        <!-- 1. Live Zoom Meeting Session -->
+        <!-- 1. Live Zoom Meeting Session (Featured / Primary) -->
         <div class="zoom-card" id="zoomMeetingCard">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;">
             <div>
@@ -726,9 +726,14 @@
               <h2 style="font-size:24px;margin:10px 0 4px;" id="zoomTopic">Live Forex & Index Price Action Masterclass</h2>
               <p style="color:var(--muted);font-size:13px;" id="zoomSchedule">Every Tuesday & Thursday | 18:00 - 19:30 SAST</p>
             </div>
-            <a href="https://zoom.us" target="_blank" id="zoomLinkBtn" class="btn-action btn-green" style="padding:14px 24px;">
-              Join Live Zoom Class ↗
-            </a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a href="https://zoom.us" target="_blank" rel="noopener noreferrer" id="zoomLinkBtn" class="btn-action btn-green" style="padding:14px 24px;">
+                Join Live Zoom Class ↗
+              </a>
+              <button type="button" class="btn-action btn-outline" id="btnCopyZoomMain" style="padding:14px 16px;" onclick="copyMainZoomUrl()">
+                Copy Link
+              </button>
+            </div>
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px;background:rgba(0,0,0,0.3);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06)">
@@ -749,6 +754,17 @@
             Please log in 5 minutes early with TradingView ready and your notebook open.
           </p>
         </div>
+
+        <!-- Additional Scheduled Masterclasses -->
+        <div id="additionalZoomCardWrap" style="margin-top:16px;margin-bottom:24px;display:none;">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:#fff;">
+            <span>📅</span> All Scheduled Academy Live Sessions (<span id="zoomCountBadge" style="color:var(--green)">0</span>)
+          </h3>
+          <div id="additionalZoomList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
 
         <!-- 2. Learning Progress Section -->
         <div class="card-panel">
@@ -860,7 +876,12 @@
 
       if (tabId === 'enquire') renderApplications();
       if (tabId === 'payment') renderPaymentTab();
-      if (tabId === 'learners') renderLearnersTab();
+      if (tabId === 'learners') {
+        renderLearnersTab();
+        if (window.RoverStore && window.RoverStore.syncZoomMeetingsFromFirestore) {
+          window.RoverStore.syncZoomMeetingsFromFirestore().then(() => renderLearnersTab());
+        }
+      }
     }
 
     function toggleMenu() {
@@ -876,7 +897,11 @@
 
     function logout() {
       window.RoverStore.setCurrentUser(null);
-      if (window.auth && window.auth.signOut) window.auth.signOut();
+      try {
+        if (window.auth && typeof window.auth.signOut === 'function') {
+          window.auth.signOut();
+        }
+      } catch (e) {}
       window.location.href = 'login.html';
     }
 
@@ -1237,16 +1262,70 @@
 
       // 1. Render Zoom Meetings
       const meetings = window.RoverStore.getZoomMeetings();
-      const activeMeeting = meetings.find(m => m.status === 'active') || meetings[0];
-      if (activeMeeting) {
-        document.getElementById('zoomTopic').textContent = activeMeeting.topic;
-        document.getElementById('zoomSchedule').textContent = `${activeMeeting.scheduleDate} | ${activeMeeting.scheduleTime}`;
-        document.getElementById('zoomIdDisplay').textContent = activeMeeting.meetingId || '849 2049 1823';
-        document.getElementById('zoomPassDisplay').textContent = activeMeeting.passcode || 'ROVER2025';
-        document.getElementById('zoomInstructorDisplay').textContent = activeMeeting.instructor || 'Lethabo Loate';
-        document.getElementById('zoomInstructions').textContent = activeMeeting.instructions || '';
-        document.getElementById('zoomLinkBtn').href = activeMeeting.zoomUrl || 'https://zoom.us';
+      const primaryMeeting = meetings.find(m => m.isPrimary && m.status !== 'paused') || 
+                             meetings.find(m => m.status === 'active') || 
+                             meetings[0];
+
+      const zoomCard = document.getElementById('zoomMeetingCard');
+      if (primaryMeeting && primaryMeeting.status !== 'paused') {
+        zoomCard.style.display = 'block';
+        document.getElementById('zoomTopic').textContent = primaryMeeting.topic;
+        document.getElementById('zoomSchedule').textContent = `${primaryMeeting.scheduleDate} | ${primaryMeeting.scheduleTime}`;
+        document.getElementById('zoomIdDisplay').textContent = primaryMeeting.meetingId || '—';
+        document.getElementById('zoomPassDisplay').textContent = primaryMeeting.passcode || '—';
+        document.getElementById('zoomInstructorDisplay').textContent = primaryMeeting.instructor || 'Lethabo Loate';
+        document.getElementById('zoomInstructions').textContent = primaryMeeting.instructions || 'Review market charts prior to joining.';
+
+        let pUrl = primaryMeeting.zoomUrl || 'https://zoom.us';
+        if (!/^https?:\/\//i.test(pUrl)) pUrl = 'https://' + pUrl;
+        const zoomLinkBtn = document.getElementById('zoomLinkBtn');
+        zoomLinkBtn.href = pUrl;
+        zoomLinkBtn.target = "_blank";
+        zoomLinkBtn.rel = "noopener noreferrer";
+      } else {
+        zoomCard.style.display = 'none';
       }
+
+      // Render additional / scheduled meetings
+      const addWrap = document.getElementById('additionalZoomCardWrap');
+      const addList = document.getElementById('additionalZoomList');
+      const otherMeetings = meetings.filter(m => m.status !== 'paused');
+
+      if (otherMeetings.length > 1 && addWrap && addList) {
+        addWrap.style.display = 'block';
+        document.getElementById('zoomCountBadge').textContent = otherMeetings.length;
+        addList.innerHTML = otherMeetings.map(m => {
+          let mUrl = m.zoomUrl || 'https://zoom.us';
+          if (!/^https?:\/\//i.test(mUrl)) mUrl = 'https://' + mUrl;
+          const isCurrPrimary = primaryMeeting && primaryMeeting.id === m.id;
+          return `
+            <div style="background:var(--card);border:1px solid ${isCurrPrimary ? 'rgba(163,230,53,0.4)' : 'var(--border)'};border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;position:relative;">
+              ${isCurrPrimary ? '<span style="position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--green);background:rgba(163,230,53,0.12);border:1px solid rgba(163,230,53,0.3);padding:2px 8px;border-radius:12px;">★ Featured</span>' : ''}
+              <div>
+                <strong style="font-size:15px;color:#fff;display:block;margin-bottom:4px;padding-right:70px;">${m.topic}</strong>
+                <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:8px;">${m.scheduleDate} • ${m.scheduleTime}</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
+                  ID: <span style="font-family:monospace;color:#fff">${m.meetingId || '—'}</span> &nbsp;|&nbsp; 
+                  Pass: <span style="font-family:monospace;color:var(--green)">${m.passcode || '—'}</span> &nbsp;|&nbsp; 
+                  By: <span style="color:#fff">${m.instructor || 'Lethabo Loate'}</span>
+                </div>
+                ${m.instructions ? `<div style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:12px;">Note: ${m.instructions}</div>` : ''}
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <a href="${mUrl}" target="_blank" rel="noopener noreferrer" class="btn-action btn-green" style="flex:1;text-align:center;font-size:12px;padding:8px 12px;text-decoration:none;">
+                  Join Class ↗
+                </a>
+                <button type="button" class="btn-action btn-outline" style="font-size:12px;padding:8px 12px;" onclick="copyText('${mUrl}')">
+                  Copy Link
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (addWrap) {
+        addWrap.style.display = 'none';
+      }
+
 
       // 2. Render Progress Tracking
       const prog = window.RoverStore.getProgressForUser(currentUser.id);
@@ -1287,8 +1366,8 @@
     // Learning Document Reader Navigation & PDF Support
     let currentDocViewMode = 'pdf';
 
-    function renderLearningDoc() {
-      const docData = window.RoverStore.getLearningContent();
+    async function renderLearningDoc() {
+      let docData = window.RoverStore.getLearningContent();
       document.getElementById('docReaderTitle').textContent = docData.title || 'Rover Trading Master Curriculum';
       document.getElementById('docReaderSubtitle').textContent = docData.subtitle || 'Official Student Handbook by Lethabo Loate';
 
@@ -1301,12 +1380,18 @@
         watermark.textContent = `ROVER TRADING • ${(currentUser.firstName || 'STUDENT').toUpperCase()} • ${currentUser.accountNumber || 'RT10001'} • CONFIDENTIAL`;
       }
 
-      if (docData.pdfDataUrl) {
-        // PDF is uploaded and available
+      if (docData.docType === 'pdf') {
         switcher.style.display = 'flex';
         document.getElementById('docPdfNameDisplay').textContent = docData.pdfFileName || 'Rover_Trading_Handbook.pdf';
         document.getElementById('docPdfMetaDisplay').textContent = `${docData.pdfFileSize || 'Official PDF Document'} • Uploaded by ${docData.updatedBy || 'Instructor'} • Updated: ${new Date(docData.lastUpdated).toLocaleDateString()}`;
-        document.getElementById('docPdfIframe').src = `${docData.pdfDataUrl}#toolbar=0&navpanes=0&scrollbar=1`;
+
+        if (!docData.pdfDataUrl && docData.chunked && window.RoverStore.loadFullLearningDoc) {
+          docData = await window.RoverStore.loadFullLearningDoc();
+        }
+
+        if (docData.pdfDataUrl) {
+          document.getElementById('docPdfIframe').src = `${docData.pdfDataUrl}#toolbar=0&navpanes=0&scrollbar=1`;
+        }
 
         if (currentDocViewMode === 'pdf') {
           pdfWrap.style.display = 'block';
@@ -1395,7 +1480,7 @@
       db.collection('zoom_meetings').onSnapshot(snap => {
         if (!snap.empty) {
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          window.RoverStore.saveZoomMeetings(list);
+          window.RoverStore.saveZoomMeetingsFromCloud(list);
           if (document.getElementById('tab-learners').style.display === 'block') {
             renderLearnersTab();
           }
@@ -1412,6 +1497,21 @@
         }
       });
     }
+
+    function copyMainZoomUrl() {
+      const btn = document.getElementById('zoomLinkBtn');
+      if (btn && btn.href) {
+        copyText(btn.href);
+      }
+    }
+
+    // Real-time listener for Zoom meetings updates
+    window.addEventListener('roverZoomMeetingsUpdated', () => {
+      const learnersTab = document.getElementById('tab-learners');
+      if (learnersTab && learnersTab.style.display === 'block') {
+        renderLearnersTab();
+      }
+    });
 
     // Initialize Page
     initUser();
