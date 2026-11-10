@@ -113,6 +113,278 @@
       color: var(--muted);
     }
     .nav-links a:hover { color: #fff; }
+
+    /* Top-Left Navigation Menu Bar */
+    .nav-left-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+    .top-menu-wrapper {
+      position: relative;
+    }
+    .top-menu-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .top-menu-btn:hover, .top-menu-btn.open {
+      background: rgba(163, 230, 53, 0.12);
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: 0 0 16px rgba(163, 230, 53, 0.2);
+    }
+    .top-menu-icon {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      width: 15px;
+      height: 12px;
+    }
+    .top-menu-icon span {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: currentColor;
+      border-radius: 2px;
+      transition: all 0.25s ease;
+    }
+    .top-menu-btn.open .top-menu-icon span:nth-child(1) {
+      transform: translateY(5px) rotate(45deg);
+    }
+    .top-menu-btn.open .top-menu-icon span:nth-child(2) {
+      opacity: 0;
+    }
+    .top-menu-btn.open .top-menu-icon span:nth-child(3) {
+      transform: translateY(-5px) rotate(-45deg);
+    }
+    .top-menu-role-badge {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(163, 230, 53, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(163, 230, 53, 0.3);
+    }
+    .top-menu-role-badge.admin-badge {
+      background: rgba(234, 179, 8, 0.15);
+      color: #facc15;
+      border-color: rgba(234, 179, 8, 0.35);
+    }
+    .top-menu-caret {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+    .top-menu-btn.open .top-menu-caret {
+      transform: rotate(180deg);
+      color: var(--green);
+    }
+
+    /* Flyout Navigation Panel */
+    .top-menu-flyout {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 350px;
+      background: #0d1513;
+      border: 1px solid rgba(163, 230, 53, 0.25);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 24px rgba(163, 230, 53, 0.08);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: topMenuPop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes topMenuPop {
+      from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .top-menu-flyout.show {
+      display: flex;
+    }
+    .flyout-user-card {
+      padding: 14px 16px;
+      background: linear-gradient(180deg, rgba(25, 38, 33, 0.95), rgba(16, 25, 23, 0.7));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .flyout-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--green), #4d7c0f);
+      color: #000;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(163, 230, 53, 0.25);
+    }
+    .flyout-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .flyout-user-name {
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .flyout-user-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      font-size: 11px;
+    }
+    .flyout-acc-tag {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--green);
+      background: rgba(163, 230, 53, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .flyout-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.15s;
+    }
+    .flyout-close-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .flyout-scroll-body {
+      max-height: calc(85vh - 160px);
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .flyout-scroll-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .flyout-scroll-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    .flyout-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      padding: 8px 10px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .flyout-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      color: #e5e7eb;
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .flyout-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.08);
+      transform: translateX(2px);
+    }
+    .flyout-item.admin-item {
+      color: #fef08a;
+    }
+    .flyout-item.admin-item:hover {
+      background: rgba(234, 179, 8, 0.1);
+      color: #facc15;
+      border-color: rgba(234, 179, 8, 0.25);
+    }
+    .flyout-item .item-icon {
+      font-size: 14px;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      flex-shrink: 0;
+    }
+    .flyout-footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: #09100e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .flyout-logout-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #f87171;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .flyout-logout-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #f87171;
+      color: #fff;
+    }
+    .flyout-key-hint {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+    }
+
+    @media(max-width: 600px) {
+      .top-menu-flyout { width: 92vw; left: 4vw; position: fixed; top: 68px; }
+    }
     /* Hero */
     .hero { padding: 70px 0 90px; }
     .hero-layout { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center; }
@@ -254,8 +526,123 @@
       margin-bottom: 12px;
       cursor: pointer;
     }
-    summary { font-weight: 700; font-size: 14px; color: #fff; outline: none; }
+    details summary { font-weight: 700; font-size: 14px; color: #fff; outline: none; }
     details p { margin-top: 12px; font-size: 13px; color: var(--muted); }
+
+    /* Terms & Conditions Section */
+    .terms-card {
+      background: #0d1513;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      margin-top: 24px;
+    }
+    .terms-highlight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+    .terms-highlight-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(163, 230, 53, 0.2);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .terms-highlight-item h4 {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .terms-highlight-item p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .terms-nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .terms-tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .terms-tab-btn.active, .terms-tab-btn:hover {
+      background: rgba(163, 230, 53, 0.12);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .terms-reader {
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #d1d5db;
+    }
+    .terms-reader::-webkit-scrollbar { width: 5px; }
+    .terms-reader::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .terms-clause-group { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .terms-clause-group:last-child { border-bottom: none; }
+    .terms-clause-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terms-clause-title span { color: var(--green); font-family: monospace; }
+    .terms-clause-body p { margin-bottom: 8px; font-size: 12.5px; color: #9ca3af; }
+    .terms-subclause { padding-left: 18px; margin-bottom: 6px; color: #d1d5db; font-size: 12.5px; }
+    .terms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+    .terms-table th, .terms-table td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    .terms-table th { background: rgba(255,255,255,0.03); color: var(--green); font-weight: 700; }
+    .terms-callout {
+      background: rgba(163, 230, 53, 0.06);
+      border-left: 3px solid var(--green);
+      padding: 12px 16px;
+      border-radius: 0 10px 10px 0;
+      margin: 14px 0;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+    .terms-callout-warn {
+      background: rgba(234, 179, 8, 0.08);
+      border-left: 3px solid var(--gold);
+      color: #fef08a;
+    }
+    .terms-link {
+      color: var(--green);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+    .terms-link:hover {
+      color: #fff;
+    }
     /* Book Modal */
     .book-modal-backdrop {
       display: none;
@@ -356,22 +743,109 @@
   <!-- Navigation -->
   <header>
     <div class="container navbar">
-      <a href="index.html" class="logo">
-        <div class="logo-badge">R</div>
-        <div>ROVER <span class="accent">TRADING</span></div>
-      </a>
-      <nav class="nav-links">
-        <a href="#about">About</a>
-        <a href="#curriculum">Curriculum</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#schedule">Schedule</a>
-        <a href="#reviews">Reviews</a>
-        <a href="#faq">FAQ</a>
-        <a href="#contact">Contact</a>
-      </nav>
+      <div class="nav-left-group">
+        <a href="index.html" class="logo">
+          <div class="logo-badge">R</div>
+          <div>ROVER <span class="accent">TRADING</span></div>
+        </a>
+
+        <div class="nav-divider"></div>
+
+        <!-- Top-Left Navigation Menu Bar for Students & Admins -->
+        <div class="top-menu-wrapper" id="topMenuWrapper">
+          <button class="top-menu-btn" id="topMenuBtn" onclick="toggleTopMenu(event)" aria-expanded="false" aria-label="Portal Navigation Menu">
+            <div class="top-menu-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span class="top-menu-label">Menu</span>
+            <span class="top-menu-role-badge" id="topMenuRoleBadge">Portal</span>
+            <span class="top-menu-caret">▾</span>
+          </button>
+
+          <!-- Top-Left Flyout Navigation Panel -->
+          <div class="top-menu-flyout" id="topMenuFlyout">
+            <div class="flyout-user-card" id="flyoutUserCard">
+              <div class="flyout-avatar" id="flyoutAvatarLetter">R</div>
+              <div class="flyout-user-info">
+                <div class="flyout-user-name" id="flyoutUserName">Rover Trading</div>
+                <div class="flyout-user-meta">
+                  <span class="flyout-acc-tag" id="flyoutAccNumber">Academy</span>
+                  <span class="top-menu-role-badge" id="flyoutRoleBadge">Portal</span>
+                </div>
+              </div>
+              <button class="flyout-close-btn" onclick="closeTopMenu()" title="Close menu (Esc)">✕</button>
+            </div>
+
+            <div class="flyout-scroll-body">
+
+              <!-- Academy Sections -->
+              <div class="flyout-section-title" style="margin-top:6px;">
+                <span>Academy Sections</span>
+              </div>
+              <a href="index.html" class="flyout-item active">
+                <span class="item-icon">🏠</span>
+                <span>Academy Home</span>
+              </a>
+              <a href="#about" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">📖</span>
+                <span>About Rover Program</span>
+              </a>
+              <a href="#curriculum" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">📚</span>
+                <span>Curriculum Chapters</span>
+              </a>
+              <a href="#pricing" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">💎</span>
+                <span>Tuition & Packages</span>
+              </a>
+              <a href="#schedule" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">🗓</span>
+                <span>Class Schedule</span>
+              </a>
+              <a href="#reviews" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">💬</span>
+                <span>Student Reviews</span>
+              </a>
+              <a href="#faq" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">❓</span>
+                <span>Frequently Asked Questions</span>
+              </a>
+              <a href="#terms" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">⚖</span>
+                <span>Terms & Conditions</span>
+              </a>
+              <a href="#contact" class="flyout-item" onclick="closeTopMenu()">
+                <span class="item-icon">✉</span>
+                <span>Contact & Admissions</span>
+              </a>
+            </div>
+
+            <div class="flyout-footer">
+              <div id="flyoutGuestActions" style="display:flex;gap:8px;width:100%;align-items:center;justify-content:space-between;">
+                <a href="login.html" class="btn btn-outline" style="font-size:12px;padding:6px 14px;border-radius:8px;text-decoration:none">
+                  Login
+                </a>
+                <a href="signup.html" class="btn btn-primary" style="font-size:12px;padding:6px 14px;border-radius:8px;text-decoration:none">
+                  Get Started ↗
+                </a>
+              </div>
+              <div id="flyoutUserActions" style="display:none;width:100%;align-items:center;justify-content:space-between;">
+                <button class="flyout-logout-btn" onclick="homeSignOut()">
+                  <span>↪</span> Sign Out
+                </button>
+                <a href="dashboard.html" class="top-menu-role-badge" id="flyoutPortalBtn" style="text-decoration:none">
+                  Open Portal ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style="display:flex;align-items:center;gap:12px;">
-        <a href="login.html" class="btn btn-outline" id="navAuthBtn">Login</a>
-        <a href="signup.html" class="btn btn-primary">Get Started ↗</a>
+        <a href="signup.html" class="btn btn-primary" id="navHeaderCta" style="padding:8px 18px;font-size:12px">Get Started ↗</a>
       </div>
     </div>
   </header>
@@ -686,7 +1160,7 @@
       <div class="container" style="max-width:800px;">
         <div style="text-align:center;margin-bottom:40px;">
           <p class="eyebrow">Important Information</p>
-          <h2>Program terms <span class="accent">& conditions.</span></h2>
+          <h2>Commonly asked <span class="accent">Questions.</span></h2>
         </div>
         <details>
           <summary>What happens if I miss a lesson?</summary>
@@ -707,28 +1181,586 @@
       </div>
     </section>
 
-    <!-- 9. Contact -->
+    <!-- 9. Terms and Conditions -->
+    <section class="section" id="terms" style="background:linear-gradient(180deg,transparent,rgba(163,230,53,0.02),transparent);">
+      <div class="container" style="max-width:1040px;">
+        <div style="text-align:center;max-width:760px;margin:0 auto 36px;">
+          <p class="eyebrow">Academy Enrolment &amp; Usage Policy</p>
+          <h2>Terms &amp; <span class="accent">Conditions.</span></h2>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted)">
+            Governing agreement between you and Rover Trading Academy (Pty) Ltd for our educational programmes, Student Portal access, and academy code of conduct.
+          </p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px;">
+            <span style="font-size:11px;background:rgba(163,230,53,0.1);color:var(--green);border:1px solid rgba(163,230,53,0.25);padding:3px 10px;border-radius:12px;font-weight:700;">Version 1.0</span>
+            <span style="font-size:11px;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);padding:3px 10px;border-radius:12px;">Effective: 10 November 2026</span>
+            <span style="font-size:11px;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);padding:3px 10px;border-radius:12px;">Governing Law: South Africa (POPIA &amp; CPA Compliant)</span>
+          </div>
+        </div>
+
+        <!-- Four Key Highlight Cards for Students -->
+        <div class="terms-highlight-grid">
+          <div class="terms-highlight-item">
+            <h4><span>🎓</span> Educational Services Only</h4>
+            <p>Rover Trading is not an FSP and does not provide financial or investment advice under FAIS. We teach technical price action, risk models, and execution discipline for private study.</p>
+          </div>
+          <div class="terms-highlight-item">
+            <h4><span>💳</span> Transparent Tuition Fees</h4>
+            <p>Standard (R150, 3 weeks) and Premium (R400, 6 weeks). Repeat chapters R100 or R250. Missed Live Zoom sessions can be attended with a subsequent group for a R150 make-up fee.</p>
+          </div>
+          <div class="terms-highlight-item">
+            <h4><span>⏱</span> Cooling-off &amp; Refunds</h4>
+            <p>5-day cooling-off period under CPA §20 before live classes or content access commence. Once live classes or materials are accessed, programme fees are strictly non-refundable.</p>
+          </div>
+          <div class="terms-highlight-item">
+            <h4><span>🏦</span> Verified ABSA Banking</h4>
+            <p>Official ABSA Cheque: <strong>4117 7631 69</strong> (Branch 632005, PaySharp: 0683708749@ABSA). You must use your unique Student Number (RT#####) as your payment reference.</p>
+          </div>
+        </div>
+
+        <div class="terms-card">
+          <!-- Navigation Tabs -->
+          <div class="terms-nav-tabs">
+            <button class="terms-tab-btn active" id="termsTabBtn-summary" onclick="switchTermsTab('summary')">📌 Summary &amp; Protections</button>
+            <button class="terms-tab-btn" id="termsTabBtn-clauses" onclick="switchTermsTab('clauses')">⚖ Full Clauses (1 to 28)</button>
+            <button class="terms-tab-btn" id="termsTabBtn-annexureA" onclick="switchTermsTab('annexureA')">📊 Annexure A: Fees &amp; Timetable</button>
+            <button class="terms-tab-btn" id="termsTabBtn-annexureB" onclick="switchTermsTab('annexureB')">🏦 Annexure B: ABSA Banking Details</button>
+          </div>
+
+          <!-- TAB 1: Summary & Protections -->
+          <div id="termsPane-summary" class="terms-tab-pane">
+            <div class="terms-callout">
+              <strong>Notice of Binding Legal Agreement:</strong> By enrolling, creating a Student Portal account, submitting an Application, uploading Proof of Payment, or accessing educational content, you agree to be bound by these Terms and Conditions. Please review each clause before applying.
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;margin:20px 0;">
+              <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;">
+                <h4 style="color:#fff;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                  <span style="color:var(--green)">01.</span> Eligibility &amp; Minors
+                </h4>
+                <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0;">
+                  Students must be at least 18 years old to open broker trading accounts. Students under 18 may enrol in the educational programme only with the signed consent of a parent or legal guardian (Clause 4 &amp; 28).
+                </p>
+              </div>
+
+              <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;">
+                <h4 style="color:#fff;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                  <span style="color:var(--green)">02.</span> Live Zoom Sessions &amp; Attendance
+                </h4>
+                <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0;">
+                  Live Zoom links are generated per scheduled lecture and may not be shared. Missed classes may be caught up with subsequent groups for a R150 make-up fee. Sessions are presented in SAST (Clause 11).
+                </p>
+              </div>
+
+              <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;">
+                <h4 style="color:#fff;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                  <span style="color:var(--green)">03.</span> Student Conduct &amp; Zero Solicitation
+                </h4>
+                <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0;">
+                  No copying, recording, or distribution of course content or the book. Students may not offer copy-trading, signals, or solicit other students for broker schemes or referrals (Clause 10 &amp; 15).
+                </p>
+              </div>
+
+              <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;">
+                <h4 style="color:#fff;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                  <span style="color:var(--green)">04.</span> POPIA Privacy &amp; Information Officer
+                </h4>
+                <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0;">
+                  Data is collected solely to administer student accounts, verify POPs, and deliver classes. Registered Information Officer: <strong>Lethabo Loate</strong> (<a href="mailto:rovertrading1@gmail.com" class="terms-link">rovertrading1@gmail.com</a>) (Clause 16).
+                </p>
+              </div>
+            </div>
+
+            <div class="terms-callout terms-callout-warn">
+              <strong>High-Risk Market Warning (Clause 19):</strong> Trading leveraged financial instruments (Forex, CFDs, indices, commodities) carries a high risk of capital loss and is not suitable for everyone. Rover Trading makes no profit guarantees. Past illustrative results do not predict future market performance.
+            </div>
+
+            <div style="text-align:right;margin-top:16px;">
+              <button class="btn btn-outline" style="font-size:12px;padding:8px 16px;" onclick="switchTermsTab('clauses')">Read All 28 Clauses in Detail →</button>
+            </div>
+          </div>
+
+          <!-- TAB 2: Full Clauses (1 to 28) -->
+          <div id="termsPane-clauses" class="terms-tab-pane" style="display:none;">
+            <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;">
+              <input type="text" id="termsSearchInput" oninput="filterTermsClauses()" placeholder="🔍 Filter clauses (e.g. refund, zoom, make-up, pop, fais, cooling-off, loate)..." style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:#fff;font-size:12px;outline:none;">
+              <button class="btn btn-outline" style="font-size:11px;padding:9px 14px;white-space:nowrap;" onclick="expandAllClauses(true)">Expand All</button>
+              <button class="btn btn-outline" style="font-size:11px;padding:9px 14px;white-space:nowrap;" onclick="expandAllClauses(false)">Collapse All</button>
+            </div>
+
+            <div class="terms-reader" id="termsClausesContainer">
+
+              <!-- Clause 1 -->
+              <div class="terms-clause-group" data-clause="1 parties">
+                <div class="terms-clause-title"><span>1.</span> THE PARTIES</div>
+                <div class="terms-clause-body">
+                  <p>1.1 These Terms and Conditions ("<strong>Terms</strong>") constitute a binding agreement between:</p>
+                  <div class="terms-subclause">1.1.1 <strong>Rover Trading Academy (Pty) Ltd</strong>, a private company in the Republic of South Africa ("<strong>Rover Trading</strong>", "<strong>we</strong>", "<strong>us</strong>" or "<strong>our</strong>"); and</div>
+                  <div class="terms-subclause">1.1.2 The natural person who registers a student account and/or enrols for a programme ("<strong>you</strong>", "<strong>your</strong>" or "<strong>the Student</strong>").</div>
+                  <p>1.2 The individual who completes registration or enrolment is the Student and is bound by these Terms, irrespective of who pays the fees. Third-party payers act as volunteers and acquire no rights under these Terms.</p>
+                </div>
+              </div>
+
+              <!-- Clause 2 -->
+              <div class="terms-clause-group" data-clause="2 definitions interpretation">
+                <div class="terms-clause-title"><span>2.</span> DEFINITIONS AND INTERPRETATION</div>
+                <div class="terms-clause-body">
+                  <p>2.1 Key defined terms used throughout this Agreement include:</p>
+                  <div class="terms-subclause"><strong>Account:</strong> The student account created on the Website, identified by the unique student number in the format RT##### ("Student Number").</div>
+                  <div class="terms-subclause"><strong>Agreement:</strong> These Terms together with your Application, the Fee Schedule in Annexure A, and any written enrolment confirmation issued.</div>
+                  <div class="terms-subclause"><strong>Application:</strong> The enrolment application submitted through the Student Portal, including course selection.</div>
+                  <div class="terms-subclause"><strong>Content:</strong> All educational material made available by Rover Trading in any format (Curriculum, chapters, notes, slide decks, charts, templates, checklists, the Book, and audio-visual recordings).</div>
+                  <div class="terms-subclause"><strong>Curriculum:</strong> The three-chapter programme: Chapter 01 (Foundations &amp; Candlestick Anatomy), Chapter 02 (Market Structure &amp; Liquidity Framework), and Chapter 03 (Risk Management &amp; Capital Preservation Rules), along with trading-plan and psychology modules.</div>
+                  <div class="terms-subclause"><strong>Live Session:</strong> Scheduled interactive class, briefing, or workshop presented by an instructor via Zoom.</div>
+                  <div class="terms-subclause"><strong>Proof of Payment (POP):</strong> Bank confirmation, receipt, or legible screenshot of an electronic transfer uploaded through the Portal.</div>
+                  <div class="terms-subclause"><strong>The Book:</strong> <em>Read the Market like a Rover</em> by Lethabo Loate, in printed or digital form.</div>
+                </div>
+              </div>
+
+              <!-- Clause 3 -->
+              <div class="terms-clause-group" data-clause="3 acceptance terms ecta">
+                <div class="terms-clause-title"><span>3.</span> ACCEPTANCE OF THESE TERMS</div>
+                <div class="terms-clause-body">
+                  <p>3.1 You accept these Terms when you: (a) tick the acceptance box during registration or enrolment; (b) submit an Application through the Portal; (c) make payment of any Fee; or (d) access or use the Portal or Content.</p>
+                  <p>3.2 Acceptance constitutes writing under the Electronic Communications and Transactions Act 25 of 2002 ("<strong>ECTA</strong>"), and system data messages serve as sufficient proof.</p>
+                  <p>3.3 Minors under 18 years of age may only register with the written consent of a parent or legal guardian who accepts these Terms on their behalf (Clause 28).</p>
+                </div>
+              </div>
+
+              <!-- Clause 4 -->
+              <div class="terms-clause-group" data-clause="4 eligibility age minor account">
+                <div class="terms-clause-title"><span>4.</span> ELIGIBILITY</div>
+                <div class="terms-clause-body">
+                  <p>4.1 You must be at least 18 years old to enrol independently and open a trading account with any financial broker. Rover Trading presents educational courses only and does not open, fund, or operate trading accounts on your behalf.</p>
+                  <p>4.2 You must provide accurate, current legal information (legal name, valid email, contact number). Each student may hold only one Account; accounts are non-transferable.</p>
+                </div>
+              </div>
+
+              <!-- Clause 5 -->
+              <div class="terms-clause-group" data-clause="5 nature programme fais educational disclaimer">
+                <div class="terms-clause-title"><span>5.</span> NATURE OF THE PROGRAMME (FAIS DISCLAIMER)</div>
+                <div class="terms-clause-body">
+                  <p>5.1 The Programme is <strong>educational and informational only</strong>. It teaches market structure, candlestick anatomy, liquidity concepts, risk management, and trading psychology.</p>
+                  <div class="terms-callout">
+                    <strong>5.2 Rover Trading is not a financial services provider.</strong> We do not provide financial advice, investment advice, or intermediary services as contemplated in the Financial Advisory and Intermediary Services Act 37 of 2002 ("<strong>FAIS</strong>"). Nothing in our courses or live sessions constitutes financial advice or trade signals.
+                  </div>
+                  <p>5.3 No employee or representative may manage funds on your behalf. We do not guarantee financial profitability or recovery of course fees.</p>
+                </div>
+              </div>
+
+              <!-- Clause 6 -->
+              <div class="terms-clause-group" data-clause="6 registration credentials security">
+                <div class="terms-clause-title"><span>6.</span> REGISTRATION AND ACCOUNT SECURITY</div>
+                <div class="terms-clause-body">
+                  <p>6.1 Upon registration, you are issued an official Student Number (RT#####) which must be quoted on all payments.</p>
+                  <p>6.2 You are responsible for safeguarding your login credentials and notifying <a href="mailto:admin@rovertrading.com" class="terms-link">admin@rovertrading.com</a> immediately of any suspected breach.</p>
+                </div>
+              </div>
+
+              <!-- Clause 7 -->
+              <div class="terms-clause-group" data-clause="7 options pricing standard premium fee">
+                <div class="terms-clause-title"><span>7.</span> PROGRAMME OPTIONS &amp; WHAT IS INCLUDED</div>
+                <div class="terms-clause-body">
+                  <p>7.1 Current programme packages (detailed in Annexure A):</p>
+                  <div class="terms-subclause"><strong>Standard (R150):</strong> 3-week educational programme covering all 3 chapters, trading plan development, trading psychology, and online Zoom classes.</div>
+                  <div class="terms-subclause"><strong>Premium (R400):</strong> 6-week complete training covering all 3 chapters, trading plan development, psychology, online Zoom classes, live interactive group lessons, weekly market analysis, practical live learning, and community mentorship.</div>
+                  <p>7.2 Fees exclude personal trading capital, broker software fees, charting subscriptions, and personal internet/electricity infrastructure.</p>
+                </div>
+              </div>
+
+              <!-- Clause 8 -->
+              <div class="terms-clause-group" data-clause="8 payment banking pop student number">
+                <div class="terms-clause-title"><span>8.</span> PAYMENT</div>
+                <div class="terms-clause-body">
+                  <p>8.1 Payments must be made via electronic funds transfer (EFT/immediate EFT) or approved service to the official ABSA account detailed in Annexure B.</p>
+                  <p>8.2 You must quote your <strong>Student Number (RT#####)</strong> as the payment reference. Unreferenced payments cannot be automatically matched and will delay enrolment approval.</p>
+                  <p>8.3 Proof of Payment must be uploaded via the Student Portal. Payment is only deemed received once verified by our administration and cleared on bank statements.</p>
+                </div>
+              </div>
+
+              <!-- Clause 9 -->
+              <div class="terms-clause-group" data-clause="9 verification approval pending 2 business days">
+                <div class="terms-clause-title"><span>9.</span> VERIFICATION AND APPROVAL</div>
+                <div class="terms-clause-body">
+                  <p>9.1 Uploading a Proof of Payment sets your enrolment status to pending. Access to learning modules and Zoom links is unlocked once payment is verified and cleared.</p>
+                  <p>9.2 Turnaround target is 2 business days. Applications with insufficient payment or unverified references will be placed on hold.</p>
+                </div>
+              </div>
+
+              <!-- Clause 10 -->
+              <div class="terms-clause-group" data-clause="10 access content licence watermarking copyright">
+                <div class="terms-clause-title"><span>10.</span> ACCESS TO THE PORTAL AND CONTENT</div>
+                <div class="terms-clause-body">
+                  <p>10.1 Students are granted a revocable, non-exclusive, personal licence for private study during active enrolment.</p>
+                  <p>10.2 Strict prohibition against copying, screenshotting, screen-recording, broadcasting, sharing, or publishing learning materials. All content is watermarked and traceable to your unique Student Account.</p>
+                </div>
+              </div>
+
+              <!-- Clause 11 -->
+              <div class="terms-clause-group" data-clause="11 live zoom sessions attendance make-up fee repeat">
+                <div class="terms-clause-title"><span>11.</span> LIVE SESSIONS, TIMETABLE, AND ATTENDANCE</div>
+                <div class="terms-clause-body">
+                  <p>11.1 Live classes are delivered on Zoom using unique links shown on your portal dashboard. Links are private and strictly non-transferable.</p>
+                  <p>11.2 Sessions operate on South African Standard Time (SAST). Students must join on time using their real name and Student Number as their Zoom display name.</p>
+                  <p>11.7 <strong>Missed Lessons:</strong> If you miss a live session, you may attend with a subsequent group for a <strong>make-up lesson fee of R150</strong> per session.</p>
+                  <p>11.8 <strong>Repeating a Chapter:</strong> Restarting an entire chapter is subject to the applicable repeat chapter fee of <strong>R100 or R250</strong> as listed in Annexure A.</p>
+                  <p>11.9 Live sessions may be recorded by Rover Trading for internal moderation; recordings are not provided as a student entitlement.</p>
+                </div>
+              </div>
+
+              <!-- Clause 12 -->
+              <div class="terms-clause-group" data-clause="12 progress tracking verification assessment">
+                <div class="terms-clause-title"><span>12.</span> PROGRESS TRACKING AND ASSESSMENT</div>
+                <div class="terms-clause-body">
+                  <p>12.1 The portal displays verified chapter statuses updated by your instructor. These serve as educational milestones, not NQF-registered formal qualifications or guarantees of market success.</p>
+                  <p>12.2 Progress disputes may be emailed to <a href="mailto:rovertrading1@gmail.com" class="terms-link">rovertrading1@gmail.com</a> within 10 business days.</p>
+                </div>
+              </div>
+
+              <!-- Clause 13 -->
+              <div class="terms-clause-group" data-clause="13 cancellation cooling-off refunds cpa">
+                <div class="terms-clause-title"><span>13.</span> CANCELLATION, COOLING-OFF, AND REFUNDS</div>
+                <div class="terms-clause-body">
+                  <p>13.1 <strong>Cooling-off Right:</strong> Under section 20 of the Consumer Protection Act 68 of 2008, you may cancel without reason within 5 business days after payment, provided no live session has been attended and no course content has been accessed. Refund will be paid within 10 business days.</p>
+                  <div class="terms-callout terms-callout-warn">
+                    <strong>13.2 Non-Refundable After Commencement:</strong> Once a live session has been attended or course materials/portal content accessed, fees become strictly non-refundable due to the scheduled, cohort-based nature of the service.
+                  </div>
+                  <p>13.3 Non-attendance, loss of interest, or personal schedule changes do not warrant a refund.</p>
+                  <p>13.6 Written refund requests must be sent from your registered email to <a href="mailto:rovertrading1@gmail.com" class="terms-link">rovertrading1@gmail.com</a> with Student Number and payment details.</p>
+                </div>
+              </div>
+
+              <!-- Clause 14 -->
+              <div class="terms-clause-group" data-clause="14 intellectual property book loate copyright">
+                <div class="terms-clause-title"><span>14.</span> INTELLECTUAL PROPERTY</div>
+                <div class="terms-clause-body">
+                  <p>14.1 All Curriculum content, the Book <em>Read the Market like a Rover</em>, trade marks, logos, diagrams, and video material belong exclusively to Rover Trading Academy (Pty) Ltd.</p>
+                  <p>14.2 No commercial use, redistribution, or teaching using our intellectual property is permitted without written consent.</p>
+                </div>
+              </div>
+
+              <!-- Clause 15 -->
+              <div class="terms-clause-group" data-clause="15 code conduct harassment solicitation rules">
+                <div class="terms-clause-title"><span>15.</span> ACCEPTABLE USE AND STUDENT CONDUCT</div>
+                <div class="terms-clause-body">
+                  <p>15.1 Students must act lawfully, respectfully, and professionally towards instructors, staff, and peers.</p>
+                  <p>15.2 Strict prohibition against: (a) sharing login or Zoom links; (b) presenting oneself as a Rover Trading instructor; (c) running signal groups or copy-trading using academy material; (d) soliciting other students for broker schemes, MLMs, or investments; (e) abusive or defamatory language in Zoom chat; and (f) attempting to tamper with portal security.</p>
+                </div>
+              </div>
+
+              <!-- Clause 16 -->
+              <div class="terms-clause-group" data-clause="16 popia privacy data protection loate information officer">
+                <div class="terms-clause-title"><span>16.</span> CONFIDENTIALITY, PRIVACY, AND DATA PROTECTION (POPIA)</div>
+                <div class="terms-clause-body">
+                  <p>16.1 <strong>Information Officer:</strong> Lethabo Loate (<a href="mailto:rovertrading1@gmail.com" class="terms-link">rovertrading1@gmail.com</a>), registered in terms of the Protection of Personal Information Act 4 of 2013 ("<strong>POPIA</strong>").</p>
+                  <p>16.2 Personal data is collected solely to create accounts, verify payments, manage Zoom attendance, and communicate curriculum updates. Data is never sold to third parties.</p>
+                  <p>16.5 Third-party cloud providers (Firebase, Google Cloud, Zoom) maintain industry-grade security and encryption standards.</p>
+                </div>
+              </div>
+
+              <!-- Clause 17 -->
+              <div class="terms-clause-group" data-clause="17 electronic communications notices ecta">
+                <div class="terms-clause-title"><span>17.</span> ELECTRONIC COMMUNICATIONS AND RECORDS</div>
+                <div class="terms-clause-body">
+                  <p>17.1 Electronic communications via email, portal alerts, and WhatsApp satisfy legal requirements for written communication.</p>
+                </div>
+              </div>
+
+              <!-- Clause 18 -->
+              <div class="terms-clause-group" data-clause="18 third party zoom firebase absa">
+                <div class="terms-clause-title"><span>18.</span> THIRD-PARTY SERVICES</div>
+                <div class="terms-clause-body">
+                  <p>18.1 Delivery relies on third-party infrastructure (Zoom, Google Cloud/Firebase, and banking networks). We are not liable for outages on external networks.</p>
+                </div>
+              </div>
+
+              <!-- Clause 19 -->
+              <div class="terms-clause-group" data-clause="19 disclaimers risk warning financial markets loss">
+                <div class="terms-clause-title"><span>19.</span> DISCLAIMERS AND RISK WARNING</div>
+                <div class="terms-clause-body">
+                  <p>19.1 Trading financial instruments carries high risk of loss. Capital may be lost rapidly. You must never trade with money you cannot afford to lose.</p>
+                  <p>19.4 <strong>Anti-Scam Notice:</strong> Rover Trading will never ask for your broker password, bank PIN, or request trading capital transfers. Always confirm banking details against Annexure B.</p>
+                </div>
+              </div>
+
+              <!-- Clause 20 -->
+              <div class="terms-clause-group" data-clause="20 limitation liability damages cap">
+                <div class="terms-clause-title"><span>20.</span> LIMITATION OF LIABILITY</div>
+                <div class="terms-clause-body">
+                  <p>20.1 To the maximum extent permitted by law, Rover Trading and its instructors are not liable for indirect loss, lost profits, or loss of trading capital.</p>
+                  <p>20.2 Total aggregate liability under any claim is strictly capped at the total programme fees actually received from you for the enrolment concerned.</p>
+                </div>
+              </div>
+
+              <!-- Clause 21 -->
+              <div class="terms-clause-group" data-clause="21 indemnity claims breach">
+                <div class="terms-clause-title"><span>21.</span> INDEMNITY</div>
+                <div class="terms-clause-body">
+                  <p>21.1 You indemnify Rover Trading against any claims, loss, or legal costs arising from your breach of these Terms, unauthorised content distribution, or independent trading activities.</p>
+                </div>
+              </div>
+
+              <!-- Clause 22 -->
+              <div class="terms-clause-group" data-clause="22 suspension termination breach">
+                <div class="terms-clause-title"><span>22.</span> SUSPENSION AND TERMINATION</div>
+                <div class="terms-clause-body">
+                  <p>22.1 Immediate suspension may occur for breach of conduct, unauthorised content distribution, or payment disputes. Upon termination, licence to content ceases immediately.</p>
+                </div>
+              </div>
+
+              <!-- Clause 23 -->
+              <div class="terms-clause-group" data-clause="23 changes programme terms updates">
+                <div class="terms-clause-title"><span>23.</span> CHANGES TO PROGRAMME AND TERMS</div>
+                <div class="terms-clause-body">
+                  <p>23.1 Terms may be updated with a new version number. Existing enrolments are governed by the version in force at the time of enrolment unless updates are required by statute.</p>
+                </div>
+              </div>
+
+              <!-- Clause 24 -->
+              <div class="terms-clause-group" data-clause="24 force majeure loadshedding power outage">
+                <div class="terms-clause-title"><span>24.</span> FORCE MAJEURE &amp; LOAD SHEDDING</div>
+                <div class="terms-clause-body">
+                  <p>24.1 Rover Trading is not liable for delays resulting from events beyond reasonable control, including nationwide load shedding, ISP failures, or severe weather. Missed sessions will be rescheduled.</p>
+                </div>
+              </div>
+
+              <!-- Clause 25 -->
+              <div class="terms-clause-group" data-clause="25 notices email address rovertrading1">
+                <div class="terms-clause-title"><span>25.</span> NOTICES</div>
+                <div class="terms-clause-body">
+                  <p>25.1 Official notices to the academy must be emailed to <a href="mailto:rovertrading1@gmail.com" class="terms-link">rovertrading1@gmail.com</a> quoting your Student Number.</p>
+                </div>
+              </div>
+
+              <!-- Clause 26 -->
+              <div class="terms-clause-group" data-clause="26 governing law dispute afsa mediation arbitration">
+                <div class="terms-clause-title"><span>26.</span> GOVERNING LAW AND DISPUTE RESOLUTION</div>
+                <div class="terms-clause-body">
+                  <p>26.1 Governed by South African law. Good-faith negotiation within 10 business days precedes AFSA mediation or expedited arbitration.</p>
+                </div>
+              </div>
+
+              <!-- Clause 27 -->
+              <div class="terms-clause-group" data-clause="27 general severability entire agreement">
+                <div class="terms-clause-title"><span>27.</span> GENERAL</div>
+                <div class="terms-clause-body">
+                  <p>27.1 These terms constitute the whole agreement between the parties and may be concluded and signed electronically with full legal effect.</p>
+                </div>
+              </div>
+
+              <!-- Clause 28 -->
+              <div class="terms-clause-group" data-clause="28 acknowledgement signature minor parent consent">
+                <div class="terms-clause-title"><span>28.</span> ACKNOWLEDGEMENT AND ACCEPTANCE</div>
+                <div class="terms-clause-body">
+                  <p>28.1 By ticking acceptance during registration, you confirm that: (a) you are 18+ or your guardian has consented; (b) you have read and understood the risk warning in Clause 19; (c) you acknowledge that Rover Trading provides education only; and (d) programme fees are non-refundable after commencement.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 3: Annexure A (Programme & Fees) -->
+          <div id="termsPane-annexureA" class="terms-tab-pane" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <h3 style="font-size:16px;color:#fff;">ANNEXURE A — PROGRAMME &amp; FEE SCHEDULE</h3>
+              <span style="font-size:11px;color:var(--green);font-family:monospace;background:rgba(163,230,53,0.1);padding:4px 8px;border-radius:6px;">All amounts in South African Rand (ZAR)</span>
+            </div>
+
+            <table class="terms-table">
+              <thead>
+                <tr>
+                  <th>Programme / Item</th>
+                  <th>Educational Scope &amp; Duration</th>
+                  <th style="text-align:right">Fee (ZAR)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Standard Programme</strong></td>
+                  <td>3-week educational programme: all 3 chapters, trading plan development, trading psychology, online Zoom classes.</td>
+                  <td style="text-align:right;font-weight:700;color:var(--green)">R150</td>
+                </tr>
+                <tr>
+                  <td><strong>Premium Programme</strong></td>
+                  <td>6-week complete training: all 3 chapters, trading plan, psychology, Zoom classes, interactive lessons, weekly market analysis, live practice, community mentorship.</td>
+                  <td style="text-align:right;font-weight:700;color:var(--green)">R400</td>
+                </tr>
+                <tr>
+                  <td><strong>Repeat Chapter</strong></td>
+                  <td>Restarting a curriculum chapter already presented with a new group.</td>
+                  <td style="text-align:right;font-weight:700;color:#facc15">R100 or R250</td>
+                </tr>
+                <tr>
+                  <td><strong>Make-up Lesson</strong></td>
+                  <td>Attending a missed live Zoom class with a subsequent cohort group (per session).</td>
+                  <td style="text-align:right;font-weight:700;color:#facc15">R150</td>
+                </tr>
+                <tr>
+                  <td><strong>The Book: <em>Read the Market like a Rover</em></strong></td>
+                  <td>Authored by Lethabo Loate. Printed or digital edition (subject to release).</td>
+                  <td style="text-align:right;color:var(--muted)">Quoted at Order</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 style="color:#fff;font-size:14px;margin:24px 0 10px;">Official Weekly Live Zoom Timetable (SAST)</h4>
+            <table class="terms-table">
+              <thead>
+                <tr>
+                  <th>Session &amp; Chapter Focus</th>
+                  <th>Day of Week</th>
+                  <th>Time Slot (SAST)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Pre-Class Briefing (Zoom Orientation)</td>
+                  <td>Sunday</td>
+                  <td>19:40 – 20:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 01: Market Foundations &amp; Candlestick Anatomy</td>
+                  <td>Monday</td>
+                  <td>18:00 – 18:30</td>
+                </tr>
+                <tr>
+                  <td>Chapter 01: Candlestick Behaviour &amp; Context</td>
+                  <td>Tuesday</td>
+                  <td>17:00 – 18:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 01: Structural Consolidation &amp; Review</td>
+                  <td>Thursday</td>
+                  <td>18:00 – 18:30</td>
+                </tr>
+                <tr>
+                  <td>Chapter 02: Institutional Market Structure</td>
+                  <td>Monday</td>
+                  <td>18:30 – 19:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 02: Liquidity Framework &amp; Order Blocks</td>
+                  <td>Wednesday</td>
+                  <td>18:00 – 19:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 02: Execution Models &amp; Practical Setups</td>
+                  <td>Thursday</td>
+                  <td>18:30 – 19:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 03: Risk Models &amp; Capital Preservation</td>
+                  <td>Tuesday</td>
+                  <td>18:00 – 19:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 03: Trading Psychology &amp; Emotional Control</td>
+                  <td>Wednesday</td>
+                  <td>19:00 – 20:00</td>
+                </tr>
+                <tr>
+                  <td>Chapter 03: Trading Plan Construction &amp; Wrap-up</td>
+                  <td>Sunday</td>
+                  <td>19:00 – 19:40</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TAB 4: Annexure B (ABSA Payment Details) -->
+          <div id="termsPane-annexureB" class="terms-tab-pane" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <h3 style="font-size:16px;color:#fff;">ANNEXURE B — OFFICIAL ABSA BANKING DETAILS</h3>
+              <span style="font-size:11px;color:#22c55e;font-family:monospace;background:rgba(34,197,94,0.1);padding:4px 8px;border-radius:6px;">Verified Academy Account</span>
+            </div>
+
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;">
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Account Holder</div>
+                  <div style="font-size:15px;color:#fff;font-weight:800;margin-top:2px;">Rover Trading Academy (Pty) Ltd</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Banking Institution</div>
+                  <div style="font-size:15px;color:#fff;font-weight:800;margin-top:2px;">ABSA Bank South Africa</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Account Number</div>
+                  <div style="font-size:17px;color:var(--green);font-weight:900;letter-spacing:1px;font-family:monospace;margin-top:2px;">4117 7631 69</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Account Type</div>
+                  <div style="font-size:15px;color:#fff;font-weight:700;margin-top:2px;">Cheque / Current Account</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Universal Branch Code</div>
+                  <div style="font-size:15px;color:#fff;font-weight:800;font-family:monospace;margin-top:2px;">632005</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">PaySharp ID (Instant Pay)</div>
+                  <div style="font-size:15px;color:var(--green);font-weight:800;font-family:monospace;margin-top:2px;">0683708749@ABSA</div>
+                </div>
+              </div>
+
+              <div class="terms-callout" style="margin-top:20px;">
+                <strong>Payment Reference Requirement:</strong> You must use your unique <strong>Student Number (RT#####)</strong> as the payment reference so our system can reconcile your payment. Proof of Payment must be uploaded directly via the Student Portal.
+              </div>
+            </div>
+
+            <div class="terms-callout terms-callout-warn">
+              <strong>Official Security Verification:</strong> Before transferring funds, verify these banking details directly with academy administration via WhatsApp at <strong>+27 68 370 8749</strong>. Rover Trading will never ask you to pay into personal crypto wallets or unverified third-party accounts.
+            </div>
+          </div>
+
+          <!-- Bottom Actions inside Terms Card -->
+          <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+            <div style="font-size:12px;color:var(--muted)">
+              Questions regarding our terms? Email <a href="mailto:admin@rovertrading.com" class="terms-link">rovertrading1@gmail.com</a> or WhatsApp <a href="https://wa.me/27683708749" target="_blank" class="terms-link">+27 68 370 8749</a>.
+            </div>
+            <div style="display:flex;gap:10px;">
+              <a href="signup.html" class="btn btn-primary" style="font-size:12px;padding:9px 18px;">Accept &amp; Enrol Now ↗</a>
+              <a href="#curriculum" class="btn btn-outline" style="font-size:12px;padding:9px 18px;">View Curriculum →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Contact -->
     <section class="section" id="contact">
       <div class="container">
         <div style="text-align:center;max-width:650px;margin:0 auto 40px;">
           <p class="eyebrow">Get In Touch</p>
           <h2>Connect with <span class="accent">Rover Trading.</span></h2>
         </div>
-        <div class="grid-3">
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));">
           <a href="https://www.instagram.com/rover_trading" target="_blank" class="card" style="display:block">
-            <div class="card-icon" style="background:rgba(236,72,153,0.15);color:#ec4899">📷</div>
+            <div class="card-icon" style="background:rgba(236,72,153,0.12);padding:8px;">
+              <img src="assets/aistudio/instagram_947dfdb4.png" alt="Instagram" style="width:28px;height:28px;object-fit:contain;border-radius:6px;display:block;">
+            </div>
             <h3 style="font-size:18px;margin-bottom:6px">Instagram</h3>
             <p style="font-size:12px;color:var(--muted)">Daily market breakdowns and charts.</p>
             <span style="color:#ec4899;font-size:12px;font-weight:bold;margin-top:12px;display:inline-block">@rover_trading →</span>
           </a>
+          <a href="https://youtube.com/@rovertrading?si=V_3iR9WH2K5OYV93" target="_blank" class="card" style="display:block">
+            <div class="card-icon" style="background:rgba(239,68,68,0.12);padding:8px;">
+              <img src="assets/aistudio/youtube_85332e37.png" alt="YouTube" style="width:28px;height:28px;object-fit:contain;display:block;">
+            </div>
+            <h3 style="font-size:18px;margin-bottom:6px">YouTube</h3>
+            <p style="font-size:12px;color:var(--muted)">Website Structural Information and website navigation updates</p>
+            <span style="color:#ef4444;font-size:12px;font-weight:bold;margin-top:12px;display:inline-block">@rovertrading →</span>
+          </a>
           <a href="https://www.tiktok.com/@rover_trading" target="_blank" class="card" style="display:block">
-            <div class="card-icon" style="background:rgba(6,182,212,0.15);color:#06b6d4">🎵</div>
+            <div class="card-icon" style="background:rgba(6,182,212,0.12);padding:8px;">
+              <img src="assets/aistudio/tiktok_c9c57a1d.png" alt="TikTok" style="width:28px;height:28px;object-fit:contain;border-radius:50%;display:block;">
+            </div>
             <h3 style="font-size:18px;margin-bottom:6px">TikTok</h3>
             <p style="font-size:12px;color:var(--muted)">Short-form trading education.</p>
             <span style="color:#06b6d4;font-size:12px;font-weight:bold;margin-top:12px;display:inline-block">@rover_trading →</span>
           </a>
           <a href="https://wa.me/27683708749" target="_blank" class="card" style="display:block">
-            <div class="card-icon" style="background:rgba(34,197,94,0.15);color:#22c55e">💬</div>
+            <div class="card-icon" style="background:rgba(34,197,94,0.12);padding:8px;">
+              <img src="assets/aistudio/whatsapp_74d347cd.webp" alt="WhatsApp" style="width:28px;height:28px;object-fit:contain;border-radius:50%;display:block;">
+            </div>
             <h3 style="font-size:18px;margin-bottom:6px">WhatsApp Support</h3>
             <p style="font-size:12px;color:var(--muted)">Direct enrollment assistance.</p>
             <span style="color:#22c55e;font-size:12px;font-weight:bold;margin-top:12px;display:inline-block">Message Us →</span>
@@ -757,7 +1789,32 @@
 
   <footer style="border-top:1px solid var(--border);padding:40px 0;text-align:center;font-size:12px;color:var(--muted)">
     <div class="container">
-      <p>© <span id="year"></span> Rover Trading Academy. All rights reserved. Educational services only.</p>
+      <!-- Social Media Links -->
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px;align-items:center;">
+        <a href="https://www.instagram.com/rover_trading" target="_blank" title="Instagram @rover_trading" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);transition:all 0.2s;">
+          <img src="assets/aistudio/instagram_947dfdb4.png" alt="Instagram" style="width:20px;height:20px;object-fit:contain;border-radius:4px;display:block;">
+        </a>
+        <a href="https://youtube.com/@rovertrading?si=V_3iR9WH2K5OYV93" target="_blank" title="YouTube @rovertrading" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);transition:all 0.2s;">
+          <img src="assets/aistudio/youtube_85332e37.png" alt="YouTube" style="width:20px;height:20px;object-fit:contain;display:block;">
+        </a>
+        <a href="https://www.tiktok.com/@rover_trading" target="_blank" title="TikTok @rover_trading" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);transition:all 0.2s;">
+          <img src="assets/aistudio/tiktok_c9c57a1d.png" alt="TikTok" style="width:20px;height:20px;object-fit:contain;border-radius:50%;display:block;">
+        </a>
+        <a href="https://wa.me/27683708749" target="_blank" title="WhatsApp Support" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);transition:all 0.2s;">
+          <img src="assets/aistudio/whatsapp_74d347cd.webp" alt="WhatsApp" style="width:20px;height:20px;object-fit:contain;border-radius:50%;display:block;">
+        </a>
+      </div>
+
+      <div style="display:flex;gap:18px;justify-content:center;margin-bottom:14px;flex-wrap:wrap">
+        <a href="#about" style="color:var(--muted);text-decoration:none">About</a>
+        <a href="#curriculum" style="color:var(--muted);text-decoration:none">Curriculum</a>
+        <a href="#pricing" style="color:var(--muted);text-decoration:none">Tuition</a>
+        <a href="#faq" style="color:var(--muted);text-decoration:none">FAQ</a>
+        <a href="#terms" style="color:var(--green);font-weight:700;text-decoration:none">Terms &amp; Conditions</a>
+        <a href="#contact" style="color:var(--muted);text-decoration:none">Contact</a>
+        <a href="signup.html" style="color:var(--muted);text-decoration:none">Student Enrolment</a>
+      </div>
+      <p>© <span id="year"></span> Rover Trading Academy (Pty) Ltd. All rights reserved. Educational services only.</p>
     </div>
   </footer>
 
@@ -787,6 +1844,39 @@
 
     function openBookModal() { document.getElementById('bookModal').classList.add('open'); }
     function closeBookModal() { document.getElementById('bookModal').classList.remove('open'); }
+
+    // Terms & Conditions Tab Switcher
+    function switchTermsTab(tabName) {
+      const tabs = ['summary', 'clauses', 'annexureA', 'annexureB'];
+      tabs.forEach(t => {
+        const pane = document.getElementById('termsPane-' + t);
+        const btn = document.getElementById('termsTabBtn-' + t);
+        if (pane) pane.style.display = (t === tabName) ? 'block' : 'none';
+        if (btn) btn.classList.toggle('active', t === tabName);
+      });
+    }
+
+    // Terms Clauses Search Filter
+    function filterTermsClauses() {
+      const query = (document.getElementById('termsSearchInput').value || '').toLowerCase().trim();
+      const groups = document.querySelectorAll('#termsClausesContainer .terms-clause-group');
+      groups.forEach(group => {
+        const text = (group.textContent || '').toLowerCase();
+        const keywords = group.getAttribute('data-clause') || '';
+        if (!query || text.includes(query) || keywords.includes(query)) {
+          group.style.display = 'block';
+        } else {
+          group.style.display = 'none';
+        }
+      });
+    }
+
+    function expandAllClauses(expand) {
+      const groups = document.querySelectorAll('#termsClausesContainer .terms-clause-body');
+      groups.forEach(b => {
+        b.style.display = expand ? 'block' : 'none';
+      });
+    }
 
     // Dynamic Chart Simulator
     const canvas = document.getElementById('chart');
@@ -987,13 +2077,109 @@
       }, err => console.warn('Home Firestore reviews note:', err));
     }
 
-    // Sync Auth Nav Button
+    // Top-Left Navigation Menu Bar Controls
+    function toggleTopMenu(e) {
+      if (e) e.stopPropagation();
+      const flyout = document.getElementById('topMenuFlyout');
+      const btn = document.getElementById('topMenuBtn');
+      const isOpen = flyout.classList.contains('show');
+      if (isOpen) {
+        closeTopMenu();
+      } else {
+        flyout.classList.add('show');
+        btn.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function closeTopMenu() {
+      const flyout = document.getElementById('topMenuFlyout');
+      const btn = document.getElementById('topMenuBtn');
+      if (flyout) flyout.classList.remove('show');
+      if (btn) {
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function homeSignOut() {
+      window.RoverStore.setCurrentUser(null);
+      try {
+        if (window.auth && typeof window.auth.signOut === 'function') {
+          window.auth.signOut();
+        }
+      } catch (e) {}
+      window.location.reload();
+    }
+
+    window.addEventListener('click', function(e) {
+      const topMenuWrapper = document.getElementById('topMenuWrapper');
+      if (topMenuWrapper && !topMenuWrapper.contains(e.target)) {
+        closeTopMenu();
+      }
+    });
+
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeTopMenu();
+      }
+    });
+
+    // Sync Auth Nav Button & Top Menu
     const cu = window.RoverStore ? window.RoverStore.getCurrentUser() : null;
     if (cu) {
       const b = document.getElementById('navAuthBtn');
       if (b) {
         b.textContent = cu.role === 'admin' ? 'Admin Panel' : 'Dashboard';
         b.href = cu.role === 'admin' ? 'admin.html' : 'dashboard.html';
+      }
+
+      // Populate Top-Left Navigation Menu
+      const fullName = `${cu.firstName || 'User'} ${cu.lastName || ''}`.trim();
+      const letter = (cu.firstName || 'U')[0].toUpperCase();
+      const accNum = cu.accountNumber || (cu.role === 'admin' ? 'RT-ADMIN' : 'RT10001');
+      const isAdmin = cu.role === 'admin' || cu.email === 'admin@rovertrading.com' || cu.email === 'loatelethabo@gmail.com';
+
+      const topRoleBadge = document.getElementById('topMenuRoleBadge');
+      const flyoutRoleBadge = document.getElementById('flyoutRoleBadge');
+      const flyoutUserName = document.getElementById('flyoutUserName');
+      const flyoutAvatarLetter = document.getElementById('flyoutAvatarLetter');
+      const flyoutGuestActions = document.getElementById('flyoutGuestActions');
+      const flyoutUserActions = document.getElementById('flyoutUserActions');
+      const flyoutPortalBtn = document.getElementById('flyoutPortalBtn');
+      const navHeaderCta = document.getElementById('navHeaderCta');
+
+      if (flyoutGuestActions) flyoutGuestActions.style.display = 'none';
+      if (flyoutUserActions) flyoutUserActions.style.display = 'flex';
+
+      if (navHeaderCta) {
+        navHeaderCta.textContent = isAdmin ? 'Admin Panel ↗' : 'Dashboard ↗';
+        navHeaderCta.href = isAdmin ? 'admin.html' : 'dashboard.html';
+      }
+
+      if (flyoutPortalBtn) {
+        flyoutPortalBtn.textContent = isAdmin ? 'Admin Panel ↗' : 'Student Dashboard ↗';
+        flyoutPortalBtn.href = isAdmin ? 'admin.html' : 'dashboard.html';
+      }
+
+      if (isAdmin) {
+        if (topRoleBadge) {
+          topRoleBadge.textContent = 'Admin';
+          topRoleBadge.classList.add('admin-badge');
+        }
+        if (flyoutRoleBadge) {
+          flyoutRoleBadge.textContent = 'Admin';
+          flyoutRoleBadge.classList.add('admin-badge');
+        }
+      } else {
+        if (topRoleBadge) {
+          topRoleBadge.textContent = 'Student';
+          topRoleBadge.classList.remove('admin-badge');
+        }
+        if (flyoutRoleBadge) {
+          flyoutRoleBadge.textContent = 'Student';
+          flyoutRoleBadge.classList.remove('admin-badge');
+        }
       }
     }
   </script>
