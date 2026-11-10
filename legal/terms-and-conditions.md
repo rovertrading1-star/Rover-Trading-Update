@@ -1,10 +1,10 @@
-# ROVER TRADING ACADEMY (PTY) LTD
+# ROVER TRADING ACADEMY
 
 ## TERMS AND CONDITIONS OF ENROLMENT AND USE OF THE STUDENT PORTAL
 
 **Version 1.0**
-**Effective date: [insert date]**
-**Last updated: [insert date]**
+**Effective date: 10 November 2026**
+**Last updated: 10 November 2026**
 
 > These Terms and Conditions govern the agreement between you and Rover Trading Academy (Pty) Ltd in respect of the educational programmes we present and your use of the Rover Trading website and Student Portal. Please read them carefully and keep a copy. If you do not agree with them, do not enrol and do not use the Student Portal.
 
@@ -14,7 +14,7 @@
 
 1.1 These Terms and Conditions ("**Terms**") constitute a binding agreement between:
 
-1.1.1 **Rover Trading Academy (Pty) Ltd**, a private company registered in the Republic of South Africa with registration number **[insert company registration number]**, whose registered address is **[insert registered address]** ("**Rover Trading**", "**we**", "**us**" or "**our**"); and
+1.1.1 **Rover Trading Academy (Pty) Ltd**, a private upraising company not yet registered in the Republic of South Africa ("**Rover Trading**", "**we**", "**us**" or "**our**"); and
 
 1.1.2 the natural person who registers a student account and/or enrols for a programme ("**you**", "**your**" or "**the Student**").
 
@@ -246,7 +246,7 @@
 
 12.3 The instructor may record evaluation notes and feedback on your progress. Such feedback is a professional educational observation and is not a guarantee of trading performance.
 
-12.4 You may dispute a progress record by emailing **admin@rovertrading.com** within ten (10) Business Days of the record first appearing, setting out the basis of the dispute. We will review the record and respond in writing; our reasonable determination is final.
+12.4 You may dispute a progress record by emailing **rovertrading1@gmail.com** within ten (10) Business Days of the record first appearing, setting out the basis of the dispute. We will review the record and respond in writing; our reasonable determination is final.
 
 ## 13. CANCELLATION, COOLING-OFF, AND REFUNDS
 
@@ -260,7 +260,7 @@
 
 13.5 **Failed or reversed payments.** Where a payment is reversed by your bank, or a chargeback is raised, we may suspend access immediately pending resolution. Fraudulent chargebacks may result in permanent termination and may be reported.
 
-13.6 **How to request a refund.** Send a written request to **admin@rovertrading.com** from the email address registered on your Account, quoting your Student Number and the date and amount of payment. We may require reasonable proof of identity to protect against fraud.
+13.6 **How to request a refund.** Send a written request to **rovertrading1@gmail.com** from the email address registered on your Account, quoting your Student Number and the date and amount of payment. We may require reasonable proof of identity to protect against fraud.
 
 13.7 **Method and timing.** Approved refunds are paid by electronic transfer into the account from which the payment was made, within ten (10) Business Days of approval. We do not pay refunds in cash or to third parties. Bank charges incurred in making a refund may be deducted where permitted by law.
 
@@ -306,7 +306,7 @@
 
 ## 16. CONFIDENTIALITY, PRIVACY, AND DATA PROTECTION
 
-16.1 **Information Officer.** Our information officer for the purposes of the Protection of Personal Information Act 4 of 2013 ("**POPIA**") is **[insert name]**, who may be contacted at **admin@rovertrading.com**.
+16.1 **Information Officer.** Our information officer for the purposes of the Protection of Personal Information Act 4 of 2013 ("**POPIA**") is **Lethabo Loate**, who may be contacted at **rovertrading1@gmail.com**.
 
 16.2 **Information we collect.** We collect the information you provide on registration and in your Application (name, email address, contact number, Student Number), information relating to your Application and payment (course selected, amounts, Proof of Payment, verification status), records of your attendance and progress, information you send us in correspondence, and technical information generated when you use the Website.
 
@@ -390,7 +390,7 @@
 
 22.2 We may terminate this Agreement on written notice if you commit a material breach and fail to remedy it within five (5) Business Days of notice, or immediately where the breach cannot be remedied.
 
-22.3 You may terminate this Agreement at any time by written notice to **admin@rovertrading.com**. Termination does not entitle you to a refund except as provided in clause 13.
+22.3 You may terminate this Agreement at any time by written notice to **rovertrading1@gmail.com**. Termination does not entitle you to a refund except as provided in clause 13.
 
 22.4 On termination, your licence to use the Content ends immediately, you must stop using the Portal, and you must delete any Content in your possession that you were not authorised to retain.
 
@@ -412,7 +412,7 @@
 
 ## 25. NOTICES
 
-25.1 Notices to us must be sent by email to **admin@rovertrading.com**, quoting your Student Number.
+25.1 Notices to us must be sent by email to **rovertrading1@gmail.com**, quoting your Student Number.
 
 25.2 Notices to you will be sent to the email address on your Account, or posted in the Portal. A notice sent by email is deemed received on the next Business Day after sending, unless the sender receives an automated failure notice.
 
