@@ -625,7 +625,7 @@
             </div>
             <div class="flyout-item admin-item" id="mItemMembers" onclick="navigateFromMenu('admin.html', 'members')">
               <span class="item-icon">👥</span>
-              <span>Members & Students Directory</span>
+              <span>Members &amp; Delete Accounts</span>
             </div>
             <div class="flyout-item admin-item" id="mItemComments" onclick="navigateFromMenu('admin.html', 'comments')">
               <span class="item-icon">⭐</span>
@@ -652,6 +652,10 @@
             <div class="flyout-item student-item" onclick="navigateFromMenu('dashboard.html', 'learners')">
               <span class="item-icon">🎓</span>
               <span>Learners Portal (Zoom & Curriculum)</span>
+            </div>
+            <div class="flyout-item student-item" onclick="navigateFromMenu('dashboard.html', 'profile')">
+              <span class="item-icon">⚙</span>
+              <span>Edit Profile &amp; Password</span>
             </div>
 
             <!-- Academy Pages -->
@@ -692,8 +696,6 @@
           </div>
         </div>
       </div>
-
-      </div>
     </div>
 
     <div style="display:flex;align-items:center;gap:10px;">
@@ -728,7 +730,7 @@
         <span>📊</span> Student Progress Monitoring
       </button>
       <button class="admin-tab-btn" id="btnAdminTabMembers" onclick="switchAdminTab('members')">
-        <span>👥</span> Members Directory
+        <span>👥</span> Members &amp; Accounts
       </button>
       <button class="admin-tab-btn" id="btnAdminTabComments" onclick="switchAdminTab('comments')">
         <span>💬</span> Comment Control Panel
@@ -933,16 +935,24 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- TAB 5: MEMBERS DIRECTORY -->
+    <!-- TAB 5: MEMBERS DIRECTORY & ACCOUNT DELETION -->
     <!-- ======================================================== -->
     <div id="adminTab-members" class="admin-content" style="display:none">
       <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
           <div>
-            <h2><span>👥</span> Registered Members Directory</h2>
-            <p style="font-size:13px;color:var(--muted)">All active student and administrator accounts in the academy.</p>
+            <h2><span>👥</span> Registered Members &amp; Account Management</h2>
+            <p style="font-size:13px;color:var(--muted)">Search registered student and staff accounts, toggle payment status, or permanently delete accounts.</p>
           </div>
-          <button class="btn-action btn-outline" onclick="renderMembersTable()">↻ Refresh</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="memberSearchInput" class="form-control" style="width:230px;padding:7px 12px;font-size:12px;" placeholder="Search name, email, phone, RT#..." oninput="renderMembersTable()">
+            <select id="memberRoleFilter" class="form-control" style="width:auto;padding:7px 12px;font-size:12px;" onchange="renderMembersTable()">
+              <option value="all">All Roles</option>
+              <option value="student">Students Only</option>
+              <option value="admin">Admins Only</option>
+            </select>
+            <button class="btn-action btn-outline" onclick="refreshMembersCloud()">↻ Refresh Cloud</button>
+          </div>
         </div>
 
         <div style="overflow-x:auto;">
@@ -963,6 +973,27 @@
               <!-- Rendered via JS -->
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Dedicated Admin Account Deletion Area -->
+      <div class="panel" style="border-color:rgba(239,68,68,0.3);background:linear-gradient(135deg, rgba(28,16,18,0.92), var(--card));">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+          <div style="max-width:560px;">
+            <span class="badge badge-red" style="margin-bottom:8px;">Account Removal Area</span>
+            <h2 style="margin-bottom:6px;color:#fff;"><span>🗑</span> Delete Student / User Account</h2>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:0;">
+              Select any non-protected account below (or click <strong>Delete</strong> in the directory above) to permanently remove their account, portal login access, and associated records from Firestore Cloud.
+            </p>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;min-width:280px;justify-content:flex-end;">
+            <select id="deleteAccountSelect" class="form-control" style="min-width:260px;max-width:380px;">
+              <option value="">Select an account to delete...</option>
+            </select>
+            <button type="button" class="btn-action btn-decline" style="padding:10px 16px;font-size:12.5px;white-space:nowrap;" onclick="openDeleteSelectedAccount()">
+              🗑 Delete Selected Account
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1126,6 +1157,45 @@
       <h3 style="font-size:18px;margin-bottom:14px;">Proof of Payment Attachment</h3>
       <div id="popPreviewModalBody" style="margin-bottom:16px;"></div>
       <button class="btn-action btn-outline" onclick="closePopPreviewModal()">Close Preview</button>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Account Modal -->
+  <div class="modal-backdrop" id="deleteAccountModal">
+    <div class="modal-box" style="border-color:rgba(239,68,68,0.45);max-width:480px;">
+      <button style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px" onclick="closeDeleteAccountModal()">✕</button>
+      <span class="badge badge-red" style="margin-bottom:10px;">Permanent Action</span>
+      <h3 style="font-family:'Manrope',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;color:#fff;">Delete User Account?</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+        This will permanently delete the account from Firestore Cloud, revoke portal login access, and clean up their applications and progress reports.
+      </p>
+
+      <input type="hidden" id="deleteTargetUserId">
+      <div style="background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:var(--muted);">Account #:</span>
+          <strong id="delModalAcc" style="color:var(--green);font-family:monospace;">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:var(--muted);">Full Name:</span>
+          <strong id="delModalName" style="color:#fff;">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:var(--muted);">Email:</span>
+          <span id="delModalEmail" style="color:#fff;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--muted);">Role:</span>
+          <span id="delModalRole" style="color:var(--gold);text-transform:uppercase;font-weight:700;font-size:11px;">—</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn-action btn-outline" style="padding:10px 18px;" onclick="closeDeleteAccountModal()">Cancel</button>
+        <button type="button" class="btn-action" id="btnConfirmDeleteAccount" style="background:#ef4444;color:#fff;padding:10px 18px;font-weight:800;" onclick="confirmDeleteAccount()">
+          🗑 Permanently Delete Account
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1848,39 +1918,151 @@
     }
 
     // -------------------------------------------------------------
-    // 5. MEMBERS DIRECTORY
+    // 5. MEMBERS DIRECTORY & ACCOUNT DELETION
     // -------------------------------------------------------------
+    function isProtectedAccount(u, cu) {
+      if (!u) return true;
+      if (cu && cu.id === u.id) return true;
+      if (u.id === 'usr_admin_1') return true;
+      if (u.email && u.email.toLowerCase() === 'loatelethabo@gmail.com') return true;
+      return false;
+    }
+
+    async function refreshMembersCloud() {
+      if (window.RoverStore && window.RoverStore.syncUsersFromFirestore) {
+        await window.RoverStore.syncUsersFromFirestore();
+      }
+      renderMembersTable();
+      toast('info', 'Cloud Synced', 'Members directory refreshed from Firestore.');
+    }
+
     function renderMembersTable() {
       const users = window.RoverStore.getUsers();
+      const cu = window.RoverStore.getCurrentUser();
+      const searchVal = (document.getElementById('memberSearchInput')?.value || '').trim().toLowerCase();
+      const roleFilter = document.getElementById('memberRoleFilter')?.value || 'all';
+
+      let filtered = users;
+      if (roleFilter !== 'all') {
+        filtered = filtered.filter(u => (u.role || 'student') === roleFilter);
+      }
+      if (searchVal) {
+        filtered = filtered.filter(u => {
+          const full = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+          return full.includes(searchVal) ||
+            (u.email || '').toLowerCase().includes(searchVal) ||
+            (u.accountNumber || '').toLowerCase().includes(searchVal) ||
+            (u.cellNumber || '').toLowerCase().includes(searchVal);
+        });
+      }
+
       const tbody = document.getElementById('membersTableBody');
+      if (tbody) {
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No accounts match your filter criteria.</td></tr>`;
+        } else {
+          tbody.innerHTML = filtered.map(u => {
+            const isPaid = u.paymentStatus === 'paid';
+            const isUnderReview = u.paymentStatus === 'under_review';
+            let statusBadge = '';
+            if (isPaid) statusBadge = '<span class="badge badge-ok">Paid / Enrolled</span>';
+            else if (isUnderReview) statusBadge = '<span class="badge badge-warn">Under Review</span>';
+            else statusBadge = '<span class="badge badge-red">Unpaid</span>';
 
-      tbody.innerHTML = users.map(u => {
-        const isPaid = u.paymentStatus === 'paid';
-        const isUnderReview = u.paymentStatus === 'under_review';
-        let statusBadge = '';
-        if (isPaid) statusBadge = '<span class="badge badge-ok">Paid / Enrolled</span>';
-        else if (isUnderReview) statusBadge = '<span class="badge badge-warn">Under Review</span>';
-        else statusBadge = '<span class="badge badge-red">Unpaid</span>';
+            const isProtected = isProtectedAccount(u, cu);
+            const isSelf = cu && cu.id === u.id;
 
-        return `
-          <tr>
-            <td style="font-family:monospace;color:var(--green)">${u.accountNumber}</td>
-            <td><strong>${u.firstName} ${u.lastName || ''}</strong></td>
-            <td>${u.email}</td>
-            <td>${u.cellNumber || '—'}</td>
-            <td><span class="badge ${u.role === 'admin' ? 'badge-warn' : 'badge-blue'}">${u.role}</span></td>
-            <td>${statusBadge}</td>
-            <td>${new Date(u.createdAt || Date.now()).toLocaleDateString()}</td>
-            <td>
-              <div style="display:flex;gap:6px;">
-                <button class="btn-action ${isPaid ? 'btn-decline' : 'btn-accept'}" style="font-size:11px;padding:4px 8px" onclick="toggleUserPaid('${u.id}')">
-                  ${isPaid ? 'Mark Unpaid' : 'Mark Paid'}
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            return `
+              <tr>
+                <td style="font-family:monospace;color:var(--green)">${u.accountNumber || '—'}</td>
+                <td><strong>${u.firstName || ''} ${u.lastName || ''}</strong></td>
+                <td>${u.email || '—'}</td>
+                <td>${u.cellNumber || '—'}</td>
+                <td><span class="badge ${u.role === 'admin' ? 'badge-warn' : 'badge-blue'}">${u.role || 'student'}</span></td>
+                <td>${statusBadge}</td>
+                <td>${new Date(u.createdAt || Date.now()).toLocaleDateString()}</td>
+                <td>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <button class="btn-action ${isPaid ? 'btn-decline' : 'btn-accept'}" style="font-size:11px;padding:4px 8px" onclick="toggleUserPaid('${u.id}')">
+                      ${isPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                    </button>
+                    ${isProtected
+                      ? `<span class="badge badge-blue" style="font-size:10px;padding:3px 8px;" title="Primary admin and active session accounts are protected">${isSelf ? 'Active Session' : 'Protected'}</span>`
+                      : `<button class="btn-action btn-decline" style="font-size:11px;padding:4px 9px;" onclick="openDeleteAccountModal('${u.id}')">🗑 Delete</button>`
+                    }
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // Populate Danger Zone Account Selector
+      const delSel = document.getElementById('deleteAccountSelect');
+      if (delSel) {
+        const currentSelection = delSel.value;
+        const removable = users.filter(u => !isProtectedAccount(u, cu));
+        delSel.innerHTML = `<option value="">Select an account to delete (${removable.length} removable)...</option>` +
+          removable.map(u => `<option value="${u.id}">${u.accountNumber || 'RT—'} — ${u.firstName || ''} ${u.lastName || ''} (${u.email}) [${u.role || 'student'}]</option>`).join('');
+        if (currentSelection && removable.some(u => u.id === currentSelection)) {
+          delSel.value = currentSelection;
+        }
+      }
+    }
+
+    function openDeleteSelectedAccount() {
+      const sel = document.getElementById('deleteAccountSelect');
+      const userId = sel ? sel.value : '';
+      if (!userId) {
+        toast('warning', 'No Account Selected', 'Please select an account from the dropdown or table to delete.');
+        return;
+      }
+      openDeleteAccountModal(userId);
+    }
+
+    function openDeleteAccountModal(userId) {
+      const u = window.RoverStore.getUsers().find(x => x.id === userId);
+      if (!u) {
+        toast('error', 'Not Found', 'Could not find that user account.');
+        return;
+      }
+      document.getElementById('deleteTargetUserId').value = u.id;
+      document.getElementById('delModalAcc').textContent = u.accountNumber || '—';
+      document.getElementById('delModalName').textContent = `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Student';
+      document.getElementById('delModalEmail').textContent = u.email || '—';
+      document.getElementById('delModalRole').textContent = u.role || 'student';
+      document.getElementById('deleteAccountModal').classList.add('open');
+    }
+
+    function closeDeleteAccountModal() {
+      document.getElementById('deleteAccountModal').classList.remove('open');
+      document.getElementById('deleteTargetUserId').value = '';
+    }
+
+    async function confirmDeleteAccount() {
+      const userId = document.getElementById('deleteTargetUserId').value;
+      if (!userId) return;
+
+      const btn = document.getElementById('btnConfirmDeleteAccount');
+      const orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Deleting from Cloud...';
+
+      try {
+        await window.RoverStore.deleteUser(userId);
+        closeDeleteAccountModal();
+        renderMembersTable();
+        renderProgressTable();
+        renderPopsTable();
+        toast('success', 'Account Deleted', 'The account and associated records have been permanently removed.');
+      } catch (err) {
+        console.error('Delete account error:', err);
+        toast('error', 'Delete Failed', err.message || 'Could not delete this account.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+      }
     }
 
     async function toggleUserPaid(userId) {
@@ -1996,6 +2178,11 @@
         }
       });
     }
+
+    window.addEventListener('roverUsersUpdated', () => {
+      renderMembersTable();
+      renderProgressTable();
+    });
 
     // Initialize View & Deep Linking
     initAdminNavUser();

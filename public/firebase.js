@@ -32947,6 +32947,15 @@ This typically indicates that your device does not have a healthy Internet conne
     oAuthClientId: "11530780213-n1lk49etk6fmva8siuacbq9khimq0eft.apps.googleusercontent.com",
     recaptchaSiteKey: ""
   };
+  var EMAILJS_CONFIG = {
+    fromEmail: "rovertrading1@gmail.com" ? "rovertrading1@gmail.com" : "rovertrading1@gmail.com",
+    publicKey: "flReCHIiVwRVviwoW" ? "flReCHIiVwRVviwoW" : "flReCHIiVwRVviwoW",
+    serviceId: "service_qi483o9" ? "service_qi483o9" : "service_qi483o9",
+    welcomeTemplateId: "template_ci0jma9" ? "template_ci0jma9" : "template_ci0jma9",
+    adminTemplateId: "template_952feq7" ? "template_952feq7" : "template_952feq7"
+  };
+  var LOGIN_PORTAL_URL = "https://rovertrading1-star.github.io/Rover-Trading-Update/login.html";
+  var ADMIN_PORTAL_URL = "https://rovertrading1-star.github.io/Rover-Trading-Update/admin.html?tab=members";
   var app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   var firestoreDb;
   try {
@@ -33351,6 +33360,10 @@ This typically indicates that your device does not have a healthy Internet conne
     saveUsers: function(users) {
       try {
         localStorage.setItem("roverUsers", JSON.stringify(users));
+        try {
+          window.dispatchEvent(new CustomEvent("roverUsersUpdated", { detail: users }));
+        } catch (e2) {
+        }
       } catch (e2) {
         console.warn("Storage save users note:", e2);
       }
@@ -33390,51 +33403,390 @@ This typically indicates that your device does not have a healthy Internet conne
     },
     syncUsersFromFirestore: async function() {
       try {
-        const snap = await getDocs(collection(firestoreDb, "users"));
-        if (!snap.empty) {
+        const snap = await Promise.race([
+          getDocs(collection(firestoreDb, "users")),
+          new Promise((_2, reject) => setTimeout(() => reject(new Error("timeout")), 2500))
+        ]);
+        if (snap && !snap.empty) {
           const cloudUsers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-          const localUsers = this.getUsers();
-          const map = /* @__PURE__ */ new Map();
-          localUsers.forEach((u) => {
-            const k = (u.email || u.id || "").toLowerCase();
-            if (k) map.set(k, u);
-          });
-          cloudUsers.forEach((u) => {
-            const k = (u.email || u.id || "").toLowerCase();
-            if (k) map.set(k, { ...map.get(k) || {}, ...u });
-          });
-          const merged = Array.from(map.values());
-          this.saveUsers(merged);
-          return merged;
+          this.saveUsers(cloudUsers);
+          return cloudUsers;
         }
       } catch (e2) {
-        console.warn("Firestore sync users notice:", e2);
+        try {
+          const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/users?key=${firebaseConfig.apiKey}`;
+          const res = await fetch(url);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.documents && Array.isArray(json.documents)) {
+              const parsed = json.documents.map((docItem) => {
+                const obj = { id: docItem.name.split("/").pop() };
+                for (const [k, v] of Object.entries(docItem.fields || {})) {
+                  obj[k] = v.stringValue !== void 0 ? v.stringValue : v.booleanValue !== void 0 ? v.booleanValue : v.integerValue !== void 0 ? Number(v.integerValue) : v;
+                }
+                return obj;
+              });
+              this.saveUsers(parsed);
+              return parsed;
+            }
+          }
+        } catch (err) {
+        }
       }
       return this.getUsers();
     },
     syncUserToFirestore: async function(u) {
       if (!u || !u.id) return;
+      const payload = {
+        accountNumber: String(u.accountNumber || "RT10001").slice(0, 16),
+        firstName: String(u.firstName || "Student").trim().slice(0, 60) || "Student",
+        lastName: String(u.lastName || "").trim().slice(0, 60) || "Member",
+        email: String(u.email || "").toLowerCase().trim().slice(0, 120),
+        cellNumber: String(u.cellNumber || "").trim().slice(0, 30),
+        password: String(u.password || "password123").slice(0, 128),
+        paymentStatus: u.paymentStatus || "unpaid",
+        enrolledCourse: u.enrolledCourse || "Not Enrolled",
+        role: u.role || "student",
+        createdAt: u.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+        updatedAt: u.updatedAt || (/* @__PURE__ */ new Date()).toISOString()
+      };
+      const restPromise = (async () => {
+        try {
+          const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/users/${u.id}?key=${firebaseConfig.apiKey}`;
+          const fields = {};
+          for (const [k, v] of Object.entries(payload)) {
+            if (typeof v === "boolean") fields[k] = { booleanValue: v };
+            else if (typeof v === "number") fields[k] = { integerValue: String(v) };
+            else if (v !== null && v !== void 0) fields[k] = { stringValue: String(v) };
+          }
+          await fetch(url, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields })
+          });
+        } catch (err) {
+        }
+      })();
+      const sdkPromise = setDoc(doc(firestoreDb, "users", u.id), payload, { merge: true }).catch((err) => {
+        console.warn("Firestore user SDK sync note:", err);
+      });
       try {
-        const userRef = doc(firestoreDb, "users", u.id);
-        const writePromise = setDoc(userRef, {
-          accountNumber: u.accountNumber || "RT10001",
-          firstName: u.firstName || "Student",
-          lastName: u.lastName || "",
-          email: (u.email || "").toLowerCase().trim(),
-          cellNumber: u.cellNumber || "",
-          password: u.password || "password123",
-          paymentStatus: u.paymentStatus || "unpaid",
-          enrolledCourse: u.enrolledCourse || "Not Enrolled",
-          role: u.role || "student",
-          createdAt: u.createdAt || (/* @__PURE__ */ new Date()).toISOString()
-        }, { merge: true });
         await Promise.race([
-          writePromise,
-          new Promise((r) => setTimeout(r, 600))
+          Promise.all([restPromise, sdkPromise]),
+          new Promise((r) => setTimeout(r, 2500))
         ]);
         console.log("Firestore cloud: User saved successfully:", u.id);
       } catch (e2) {
         console.warn("Firestore user sync error:", e2);
+      }
+    },
+    updateUserProfile: async function(userId, updates) {
+      if (!userId) throw new Error("User ID is required.");
+      const users = this.getUsers();
+      let idx = users.findIndex((u) => u.id === userId);
+      let existing = idx !== -1 ? users[idx] : this.getCurrentUser();
+      if (!existing || existing.id !== userId) {
+        throw new Error("Account record not found.");
+      }
+      const updatedUser = {
+        ...existing,
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      if (updates.firstName !== void 0) {
+        const fn2 = String(updates.firstName).trim();
+        if (!fn2 || fn2.length > 60) throw new Error("First name must be between 1 and 60 characters.");
+        updatedUser.firstName = fn2;
+      }
+      if (updates.lastName !== void 0) {
+        const ln = String(updates.lastName).trim();
+        if (!ln || ln.length > 60) throw new Error("Last name must be between 1 and 60 characters.");
+        updatedUser.lastName = ln;
+      }
+      if (updates.cellNumber !== void 0) {
+        const cell = String(updates.cellNumber).trim();
+        if (cell.length > 30) throw new Error("Cell phone number must be 30 characters or fewer.");
+        updatedUser.cellNumber = cell;
+      }
+      if (updates.password !== void 0 && updates.password !== "") {
+        const pw = String(updates.password);
+        if (pw.length < 8 || pw.length > 128) throw new Error("Password must be between 8 and 128 characters.");
+        updatedUser.password = pw;
+      }
+      if (idx !== -1) {
+        users[idx] = updatedUser;
+      } else {
+        users.unshift(updatedUser);
+      }
+      this.saveUsers(users);
+      const cu = this.getCurrentUser();
+      if (cu && cu.id === userId) {
+        this.setCurrentUser(updatedUser);
+      }
+      try {
+        const reports = this.getProgressReports();
+        const repIdx = reports.findIndex((r) => r.userId === userId);
+        if (repIdx !== -1) {
+          reports[repIdx] = {
+            ...reports[repIdx],
+            studentName: `${updatedUser.firstName} ${updatedUser.lastName || ""}`.trim(),
+            lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
+          };
+          this.saveProgressReports(reports);
+          setDoc(doc(firestoreDb, "progress_reports", userId), {
+            studentName: reports[repIdx].studentName,
+            lastUpdated: reports[repIdx].lastUpdated
+          }, { merge: true }).catch(() => {
+          });
+        }
+      } catch (e2) {
+      }
+      await this.syncUserToFirestore(updatedUser);
+      return updatedUser;
+    },
+    deleteUser: async function(userId) {
+      if (!userId) throw new Error("User ID is required.");
+      const users = this.getUsers();
+      const target = users.find((u) => u.id === userId);
+      const cu = this.getCurrentUser();
+      if (cu && cu.id === userId) {
+        throw new Error("You cannot delete the currently signed-in administrator account.");
+      }
+      if (target && (target.id === "usr_admin_1" || target.email && target.email.toLowerCase() === "loatelethabo@gmail.com")) {
+        throw new Error("The primary academy administrator account is protected and cannot be deleted.");
+      }
+      const remainingUsers = users.filter((u) => u.id !== userId);
+      this.saveUsers(remainingUsers);
+      const reports = this.getProgressReports();
+      const hasReport = reports.some((r) => r.userId === userId);
+      if (hasReport) {
+        this.saveProgressReports(reports.filter((r) => r.userId !== userId));
+      }
+      const apps = this.getApplications();
+      const userApps = apps.filter((a) => a.userId === userId);
+      if (userApps.length > 0) {
+        this.saveApplications(apps.filter((a) => a.userId !== userId));
+      }
+      const restDelete = async (colName, docId) => {
+        try {
+          const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/${colName}/${docId}?key=${firebaseConfig.apiKey}`;
+          await fetch(url, { method: "DELETE" });
+        } catch (e2) {
+        }
+      };
+      const cloudOps = [
+        restDelete("users", userId),
+        deleteDoc(doc(firestoreDb, "users", userId)).catch((err) => console.warn("Firestore user delete note:", err))
+      ];
+      if (hasReport) {
+        cloudOps.push(restDelete("progress_reports", userId));
+        cloudOps.push(deleteDoc(doc(firestoreDb, "progress_reports", userId)).catch(() => {
+        }));
+      }
+      for (const appItem of userApps) {
+        cloudOps.push(restDelete("applications", appItem.id));
+        cloudOps.push(deleteDoc(doc(firestoreDb, "applications", appItem.id)).catch(() => {
+        }));
+      }
+      try {
+        await Promise.race([
+          Promise.all(cloudOps),
+          new Promise((r) => setTimeout(r, 2500))
+        ]);
+        console.log("Firestore cloud: Account deleted", userId);
+      } catch (e2) {
+        console.warn("Firestore account delete warning:", e2);
+      }
+      return true;
+    },
+    // -----------------------------------------------------------
+    // EMAILJS WELCOME & ADMIN NEW-ACCOUNT NOTIFICATIONS
+    // -----------------------------------------------------------
+    sendEmailViaEmailJS: async function(templateId, templateParams) {
+      const publicKey = EMAILJS_CONFIG.publicKey;
+      const serviceId = EMAILJS_CONFIG.serviceId;
+      if (!publicKey || !serviceId || !templateId) {
+        console.warn("EmailJS not configured yet. Set VITE_EMAILJS_PUBLIC_KEY, VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_WELCOME_TEMPLATE_ID, and VITE_EMAILJS_ADMIN_TEMPLATE_ID.");
+        return { skipped: true, reason: "missing_config" };
+      }
+      try {
+        const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            service_id: serviceId,
+            template_id: templateId,
+            user_id: publicKey,
+            template_params: templateParams
+          })
+        });
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          console.warn("EmailJS delivery note:", res.status, errText);
+          return { ok: false, status: res.status, error: errText };
+        }
+        return { ok: true };
+      } catch (err) {
+        console.warn("EmailJS request warning:", err);
+        return { ok: false, error: err.message };
+      }
+    },
+    getAdminRecipients: async function() {
+      const adminMap = /* @__PURE__ */ new Map();
+      adminMap.set("loatelethabo@gmail.com", { email: "loatelethabo@gmail.com", name: "Lethabo Loate" });
+      const addIfAdmin = (u) => {
+        if (!u || u.role !== "admin" || !u.email) return;
+        const em = String(u.email).trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return;
+        const name4 = `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Rover Trading Admin";
+        adminMap.set(em, { email: em, name: name4 });
+      };
+      this.getUsers().forEach(addIfAdmin);
+      try {
+        const snap = await Promise.race([
+          getDocs(query(collection(firestoreDb, "users"), where("role", "==", "admin"))),
+          new Promise((_2, reject) => setTimeout(() => reject(new Error("timeout")), 1500))
+        ]);
+        if (snap && !snap.empty) {
+          snap.docs.forEach((d) => addIfAdmin(d.data()));
+        }
+      } catch (e2) {
+        try {
+          const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/users?key=${firebaseConfig.apiKey}`;
+          const res = await Promise.race([
+            fetch(url),
+            new Promise((_2, reject) => setTimeout(() => reject(new Error("timeout")), 1500))
+          ]);
+          if (res && res.ok) {
+            const json = await res.json();
+            if (json.documents && Array.isArray(json.documents)) {
+              json.documents.forEach((docItem) => {
+                const fields = docItem.fields || {};
+                addIfAdmin({
+                  role: fields.role?.stringValue,
+                  email: fields.email?.stringValue,
+                  firstName: fields.firstName?.stringValue,
+                  lastName: fields.lastName?.stringValue
+                });
+              });
+            }
+          }
+        } catch (err) {
+        }
+      }
+      return Array.from(adminMap.values());
+    },
+    sendWelcomeEmail: async function(newUser) {
+      if (!newUser || !newUser.email) return { skipped: true };
+      const firstName = newUser.firstName || "Student";
+      const lastName = newUser.lastName || "";
+      const fullName = `${firstName} ${lastName}`.trim();
+      const accNum = newUser.accountNumber || "RT10001";
+      const userEmail = String(newUser.email).trim().toLowerCase();
+      const subject = `Welcome to Rover Trading Academy! (Account ${accNum})`;
+      const message = [
+        `Hi ${firstName},`,
+        ``,
+        `Welcome to Rover Trading Academy! Your student portal account has been created successfully.`,
+        ``,
+        `Your Account Details:`,
+        `- Student Account Number: ${accNum}`,
+        `- Registered Email: ${userEmail}`,
+        ``,
+        `Next Steps to Get Started:`,
+        `1. Sign in to your Student Portal here: ${LOGIN_PORTAL_URL}`,
+        `2. Choose your course package (Standard Course \u2014 R150 or Full Program \u2014 R400)`,
+        `3. Submit your Proof of Payment using your account number ${accNum} as the reference to unlock the Learners Portal and live Zoom sessions.`,
+        ``,
+        `If you have any questions, reply to this email or reach us on WhatsApp at +27 68 370 8749.`,
+        ``,
+        `Best regards,`,
+        `Rover Trading Academy`
+      ].join("\n");
+      return this.sendEmailViaEmailJS(EMAILJS_CONFIG.welcomeTemplateId, {
+        to_email: userEmail,
+        to_name: fullName,
+        from_email: EMAILJS_CONFIG.fromEmail,
+        from_name: "Rover Trading Academy",
+        reply_to: EMAILJS_CONFIG.fromEmail,
+        sender_email: EMAILJS_CONFIG.fromEmail,
+        first_name: firstName,
+        last_name: lastName,
+        full_name: fullName,
+        account_number: accNum,
+        email: userEmail,
+        cell_number: newUser.cellNumber || "Not provided",
+        login_url: LOGIN_PORTAL_URL,
+        academy_name: "Rover Trading Academy",
+        support_whatsapp: "+27 68 370 8749",
+        subject,
+        message
+      });
+    },
+    sendAdminNewAccountAlerts: async function(newUser) {
+      if (!newUser || !newUser.email) return [];
+      const admins = await this.getAdminRecipients();
+      const firstName = newUser.firstName || "Student";
+      const lastName = newUser.lastName || "";
+      const fullName = `${firstName} ${lastName}`.trim();
+      const accNum = newUser.accountNumber || "RT10001";
+      const userEmail = String(newUser.email).trim().toLowerCase();
+      const cellNumber = newUser.cellNumber || "Not provided";
+      const role = newUser.role || "student";
+      const createdAtDisplay = new Date(newUser.createdAt || Date.now()).toLocaleString();
+      const subject = `New Account Created: ${fullName} (${accNum}) \u2014 Rover Trading Academy`;
+      const requests = admins.map((admin) => {
+        const message = [
+          `Hello ${admin.name},`,
+          ``,
+          `A new person has just created an account on Rover Trading Academy.`,
+          ``,
+          `New Member Details:`,
+          `- Full Name: ${fullName}`,
+          `- Student Account Number: ${accNum}`,
+          `- Email Address: ${userEmail}`,
+          `- Cell / WhatsApp Number: ${cellNumber}`,
+          `- Account Role: ${role}`,
+          `- Registered At: ${createdAtDisplay}`,
+          ``,
+          `View members and manage accounts in the Admin Panel:`,
+          `${ADMIN_PORTAL_URL}`,
+          ``,
+          `\u2014 Rover Trading Academy`
+        ].join("\n");
+        return this.sendEmailViaEmailJS(EMAILJS_CONFIG.adminTemplateId, {
+          to_email: admin.email,
+          to_name: admin.name,
+          from_email: EMAILJS_CONFIG.fromEmail,
+          from_name: "Rover Trading Academy",
+          reply_to: EMAILJS_CONFIG.fromEmail,
+          sender_email: EMAILJS_CONFIG.fromEmail,
+          student_name: fullName,
+          first_name: firstName,
+          last_name: lastName,
+          student_email: userEmail,
+          email: userEmail,
+          account_number: accNum,
+          cell_number: cellNumber,
+          role,
+          created_at: createdAtDisplay,
+          admin_panel_url: ADMIN_PORTAL_URL,
+          academy_name: "Rover Trading Academy",
+          subject,
+          message
+        });
+      });
+      return Promise.allSettled(requests);
+    },
+    sendSignupNotifications: async function(newUser) {
+      if (!newUser || !newUser.email) return;
+      try {
+        await Promise.allSettled([
+          this.sendWelcomeEmail(newUser),
+          this.sendAdminNewAccountAlerts(newUser)
+        ]);
+      } catch (e2) {
+        console.warn("Signup email notifications note:", e2);
       }
     },
     // -----------------------------------------------------------

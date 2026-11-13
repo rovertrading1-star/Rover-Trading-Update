@@ -459,6 +459,10 @@
               <span class="item-icon">🎓</span>
               <span>Learners Portal (Zoom & Curriculum)</span>
             </a>
+            <a href="dashboard.html?tab=profile" class="flyout-item">
+              <span class="item-icon">⚙</span>
+              <span>Edit Profile &amp; Password</span>
+            </a>
 
             <!-- Academy Sections -->
             <div class="flyout-section-title" style="margin-top:6px;">
@@ -846,13 +850,20 @@
             createdAt: new Date().toISOString()
           };
           await window.RoverStore.syncUserToFirestore(matched);
+          const allUsers = window.RoverStore.getUsers();
+          const updatedUsers = [matched, ...allUsers.filter(u => u.email && u.email.toLowerCase() !== em)];
+          window.RoverStore.saveUsers(updatedUsers);
+          await Promise.race([
+            window.RoverStore.sendSignupNotifications(matched),
+            new Promise(r => setTimeout(r, 3000))
+          ]);
         }
 
         window.RoverStore.setCurrentUser(matched);
         toast('success', 'Google Registration Successful', 'Welcome to Rover Trading, ' + matched.firstName + '! Redirecting...');
         setTimeout(() => {
           window.location.href = matched.role === 'admin' ? 'admin.html' : 'dashboard.html';
-        }, 800);
+        }, 500);
       } catch (err) {
         console.warn('Google Auth popup notice:', err);
         if (err.code !== 'auth/popup-closed-by-user') {
@@ -909,15 +920,19 @@
       window.RoverStore.saveUsers(filtered);
       window.RoverStore.setCurrentUser(newUser);
 
-      // 3. Guaranteed background write to Firestore Cloud database instance
+      // 3. Guaranteed background write to Firestore Cloud + send Welcome & Admin notification emails
       window.RoverStore.syncUserToFirestore(newUser);
+      await Promise.race([
+        window.RoverStore.sendSignupNotifications(newUser),
+        new Promise(r => setTimeout(r, 3000))
+      ]);
 
       toast('success', 'Account Created!', 'Welcome, ' + fn + '! Taking you to your dashboard...');
 
       // 4. Swift transition
       setTimeout(() => {
         window.location.href = 'dashboard.html';
-      }, 350);
+      }, 300);
     });
 
     // Terms Modal Controllers

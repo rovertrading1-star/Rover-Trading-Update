@@ -335,6 +335,10 @@
               <span class="item-icon">🎓</span>
               <span>Learners Portal (Zoom & Curriculum)</span>
             </a>
+            <a href="dashboard.html?tab=profile" class="flyout-item">
+              <span class="item-icon">⚙</span>
+              <span>Edit Profile &amp; Password</span>
+            </a>
 
             <!-- Academy Sections -->
             <div class="flyout-section-title" style="margin-top:6px;">
@@ -538,13 +542,20 @@
             createdAt: new Date().toISOString()
           };
           await window.RoverStore.syncUserToFirestore(matched);
+          const allUsers = window.RoverStore.getUsers();
+          const updatedUsers = [matched, ...allUsers.filter(u => u.email && u.email.toLowerCase() !== em)];
+          window.RoverStore.saveUsers(updatedUsers);
+          await Promise.race([
+            window.RoverStore.sendSignupNotifications(matched),
+            new Promise(r => setTimeout(r, 3000))
+          ]);
         }
 
         window.RoverStore.setCurrentUser(matched);
         toast('success', 'Google Sign-In Successful', 'Welcome, ' + matched.firstName + '! Redirecting...');
         setTimeout(() => {
           window.location.href = matched.role === 'admin' ? 'admin.html' : 'dashboard.html';
-        }, 700);
+        }, 500);
       } catch (err) {
         console.warn('Google Auth popup notice:', err);
         if (err.code !== 'auth/popup-closed-by-user') {
@@ -562,25 +573,20 @@
       btn.disabled = true;
       btn.textContent = 'Authenticating...';
 
+      // 1. Check Firestore Cloud first (with fast timeout) so deleted accounts or updated passwords take effect immediately
       let matched = null;
-
-      // 1. Instant check in local cache (takes 0ms for active/returning users)
-      const localUsers = window.RoverStore.getUsers();
-      matched = localUsers.find(u => u.email && u.email.toLowerCase() === em);
-
-      // 2. If not found in local cache (e.g. logging in from a new device), query Firestore Cloud
-      if (!matched && typeof db !== 'undefined' && db.collection) {
-        btn.textContent = 'Checking cloud records...';
+      if (typeof db !== 'undefined' && db.collection) {
         try {
           const queryPromise = db.collection('users').where('email', '==', em).get();
           const snap = await Promise.race([
             queryPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000))
           ]);
           if (snap && !snap.empty) {
             matched = { id: snap.docs[0].id, ...snap.docs[0].data() };
-            console.log('User found in Firestore cloud:', matched.id);
-            localUsers.unshift(matched);
+          } else if (snap && snap.empty) {
+            // Confirm via REST or remove stale local entry if deleted in cloud
+            const localUsers = window.RoverStore.getUsers().filter(u => !u.email || u.email.toLowerCase() !== em);
             window.RoverStore.saveUsers(localUsers);
           }
         } catch (err) {
@@ -588,7 +594,13 @@
         }
       }
 
-      // 3. Fallback to full sync if needed
+      // 2. Fallback to local cache if cloud query timed out or offline
+      if (!matched) {
+        const localUsers = window.RoverStore.getUsers();
+        matched = localUsers.find(u => u.email && u.email.toLowerCase() === em);
+      }
+
+      // 3. Fallback to full sync if still not found
       if (!matched && window.RoverStore && window.RoverStore.syncUsersFromFirestore) {
         const cloudUsers = await window.RoverStore.syncUsersFromFirestore();
         matched = cloudUsers.find(u => u.email && u.email.toLowerCase() === em);
@@ -601,9 +613,15 @@
         return;
       }
 
-      // 4. Validate Password (supports custom registered passwords and demo passwords)
+      // 4. Validate Password (respects updated user passwords)
       const correctPw = matched.password || 'password123';
-      if (pw !== correctPw && pw !== 'password123' && pw !== 'admin123') {
+      if (correctPw === 'google_authenticated' && pw !== 'google_authenticated') {
+        btn.disabled = false;
+        btn.textContent = 'Sign In ↗';
+        toast('warning', 'Google Account', 'This account uses Google Sign-In. Click "Sign in with Google" below or set a password in Profile Settings.');
+        return;
+      }
+      if (pw !== correctPw) {
         btn.disabled = false;
         btn.textContent = 'Sign In ↗';
         toast('error', 'Incorrect Password', 'The password entered does not match our records.');
